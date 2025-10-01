@@ -11004,7 +11004,7 @@ def finance_export():
 
 # ---- EMPLOYEES HUB ----
 @app.route("/employees", methods=["GET", "POST"], endpoint="employees_hub")
-@require_role("admin", "director", "headteacher", "bursar")
+@require_role("admin", "director", "headteacher", "bursar","dos")
 def employees_hub():
     conn = get_db_connection()
     c = conn.cursor()
@@ -11071,7 +11071,7 @@ def employees_hub():
 
 # ---- EDIT EMPLOYEE ----
 @app.route("/employees/<int:eid>/edit", methods=["GET", "POST"], endpoint="employee_edit")
-@require_role("admin", "director", "headteacher")
+@require_role("admin", "director", "headteacher","dos")
 def employee_edit(eid):
     conn = get_db_connection()
     c = conn.cursor()
