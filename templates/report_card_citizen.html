@@ -1,0 +1,183 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  /* ==== Page + typography (compact but readable) ==== */
+  .page{ width:186mm; max-width:100%; margin:0 auto 20px; background:#fff; border:1px solid #111; border-radius:8px; padding:10px 10px 6px; font-size:11.5px; line-height:1.24; }
+  .hdr{line-height:1.05;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+  .hdr .center{flex:3;text-align:center}.hdr .left,.hdr .right{flex:1}
+  .hdr .name{font-weight:800;font-size:17px}
+  .hdr .tagline{font-weight:600}
+  .hdr .motto{font-style:italic}
+  .hdr .meta{font-size:10.5px;color:#374151}
+  .section-title{text-align:center;font-weight:700;margin:4px 0 6px;text-decoration:underline}
+  .rowline{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:3px}
+  .rowline>div{flex:1 1 220px}
+  /* ==== Tables ==== */
+  table.report{width:100%;border-collapse:collapse;table-layout:fixed}
+  table.report th,table.report td{border:1px solid #111;padding:2px 4px;font-size:11px;word-wrap:break-word;overflow-wrap:break-word}
+  table.report thead th{background:none}
+  .report thead th:nth-child(5), .report td:nth-child(5){ max-width:150px }
+  /* Midterm table tighter and resilient to dynamic column count */
+  .report.midterm th,.report.midterm td{ font-size:10px; padding:2px 3px }
+  .small{font-size:10.5px}
+  .muted{color:#6b7280}
+  .legend{font-size:10.5px}
+  .footer-note{margin-top:6px;font-size:10.5px}
+  @media print{
+    @page{ margin: 8mm }
+    body * { visibility: hidden }
+    .page, .page * { visibility: visible }
+    .page{ border:1px solid #000; box-shadow:none; margin:0 auto }
+    table, thead, tbody, tfoot, tr, td, th{ page-break-inside: avoid !important; }
+    thead{ display: table-header-group } tfoot{ display: table-footer-group }
+    body{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html{ zoom: 0.94; }
+  }
+</style>
+ <!-- NAV (screen only) -->
+<div class="no-print d-flex justify-content-between align-items-center mb-2">
+  <div class="btn-group">
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('reports_hub') }}">Reports</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('students') }}">Students</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('student_statement') }}">Statement</a>
+  </div>
+  <div class="btn-group">
+    {% if prev_id %}
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('report_card', student_id=prev_id, term=term, year=year) }}">&larr; Prev</a>
+    {% endif %}
+    {% if next_id %}
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('report_card', student_id=next_id, term=term, year=year) }}">Next &rarr;</a>
+    {% endif %}
+    <button class="btn btn-success btn-sm" onclick="window.print()">
+      <i class="bi bi-printer"></i> Print All
+    </button>
+  </div>
+</div>
+
+<div class="page">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="left"><img src="{{ url_for('static', filename='logo.jpg') }}" alt="School Logo" width="80"></div>
+    <div class="center">
+      <div class="name">{{ school.name }}</div>
+      <div class="tagline">{{ school.tagline }}</div>
+      <div class="motto">{{ school.motto }}</div>
+      <div class="meta">{{ school.phones }} &nbsp;&nbsp;&nbsp; {{ school.pobox }}</div>
+    </div>
+    <div class="right"></div>
+  </div>
+
+  <div class="section-title">End of Term Report</div>
+
+  <!-- Identifiers -->
+  <div class="rowline small">
+    <div><strong>NAME:</strong> {{ student.first_name }} {{ student.middle_name or '' }} {{ student.last_name }}</div>
+    <div><strong>STUDENT’S NUMBER:</strong> {{ student.student_number }}</div>
+  </div>
+  <div class="rowline small">
+    <div><strong>PAYMENT NUMBER:</strong> {{ payment_number or 'N/A' }}</div>
+    <div><strong>CLASS:</strong> {{ student.class_name }} {{ student.stream }}</div>
+    <div><strong>TERM:</strong> {{ term }} &nbsp;&nbsp; <strong>YEAR:</strong> {{ year }}</div>
+  </div>
+
+  <!-- Main table -->
+  <table class="report">
+    <thead>
+      <tr>
+        <th>SUBJECT</th><th>EOT</th>
+        <th>TOTAL<br><span class="muted small">(100%)</span></th>
+        <th>GRADE</th><th>COMMENT</th><th>INITIALS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.subject }}{% if r.subject_code %} <span class="muted small">({{ r.subject_code }})</span>{% endif %}</td>
+        <td>{{ r.eot or '' }}</td>
+        <td>{{ r.total_100 or '' }}</td>
+        <td>{{ r.grade or '' }}</td>
+        <td>{{ r.comment or '' }}</td>
+        <td>{{ r.initials or '' }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td><strong>TOTAL</strong></td>
+        <td>{{ total_sum or '' }}</td>
+        <td>{{ total_sum or '' }}</td>
+        <td>{% if aggregate is not none %}{{ aggregate }}{% endif %}</td>
+        <td></td><td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Summary -->
+  <div class="rowline small" style="margin-top:6px;">
+    <div><strong>Average</strong>: {{ avg_overall or '' }}</div>
+    <div><strong>Aggregate:</strong> {{ aggregate or '' }} &nbsp;&nbsp; <strong>Division:</strong> {{ division or '' }}</div>
+    <div>
+     <strong>Class Position:</strong>
+      {% set n = position %}
+      {% if n %}
+        {% set last = n % 10 %}{% set last2 = n % 100 %}
+        {{ n }}{% if last == 1 and last2 != 11 %}st{% elif last == 2 and last2 != 12 %}nd{% elif last == 3 and last2 != 13 %}rd{% else %}th{% endif %}
+      {% endif %}
+      &nbsp; <strong>Class of:</strong> {{ class_size or '' }}
+    </div>
+  </div>
+
+  <!-- MID TERM EXAMS (dynamic columns) -->
+  <div class="section-title" style="margin-top:8px;">MID TERM EXAMS</div>
+  <table class="report midterm">
+    <thead>
+      <tr>
+        <th>Assessment</th>
+        {% for code in midterm_subjects %}
+          <th>{{ code }}</th><th>GR</th>
+        {% endfor %}
+        <th>TOTAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if midterms and midterms|length %}
+        {% for m in midterms %}
+          <tr>
+            <td>{{ m.assessment }}</td>
+            {% for code in midterm_subjects %}
+              <td>{{ m.scores[code] if m.scores[code] is not none else '' }}</td>
+              <td>{{ m.grades[code] or '' }}</td>
+            {% endfor %}
+            <td>{{ m.total or '' }}</td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="{{ 2*midterm_subjects|length + 2 }}" class="small muted">No midterm data recorded.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <!-- Remarks / Next term -->
+  <div class="small" style="margin-top:8px;">
+    <div><strong>Class Teacher’s comment:</strong> <em>{{ comments.teacher_comment if comments else '' }}</em></div>
+    <div><strong>Head Teacher’s Comment:</strong> <em>{{ comments.head_comment if comments else '' }}</em></div>
+  </div>
+  <div class="small" style="margin-top:6px;"><strong>Signature/Stamp:</strong> ……………………….</div>
+
+  {% if next_term_info and (next_term_info.next_term or next_term_info.next_term_date) %}
+  <div class="small" style="margin-top:4px;">
+    <strong>Term {{ next_term_info.next_term or '' }} begins on:</strong> {{ next_term_info.next_term_date or '' }}
+  </div>
+  {% endif %}
+
+  <!-- Grading legend -->
+  <div class="legend" style="margin-top:8px;">
+    <strong>Marks</strong> →
+    {% for g in grading %}
+      {{ g.lower_limit }}–{{ g.upper_limit }} : <strong>{{ g.grade }}</strong>{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </div>
+  <div class="footer-note"><em>Invalid without school Stamp</em></div>
+</div>
+{% endblock %}

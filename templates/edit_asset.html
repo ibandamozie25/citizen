@@ -1,0 +1,49 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-center text-info mb-4">Edit Asset</h3>
+
+  <form method="POST" class="border p-4 rounded shadow">
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label>Asset Name</label>
+        <input type="text" name="name" class="form-control" value="{{ asset.name }}" required>
+      </div>
+      <div class="col-md-6">
+        <label>Model</label>
+        <input type="text" name="model" class="form-control" value="{{ asset.model }}">
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <label>Year Purchased</label>
+        <input type="date" name="year_purchased" class="form-control" value="{{ asset.year_purchased }}" required>
+      </div>
+      <div class="col-md-4">
+        <label>Condition</label>
+        <select name="condition" class="form-control" required>
+          <option value="Good" {% if asset.condition == 'Good' %}selected{% endif %}>Good</option>
+          <option value="Fair" {% if asset.condition == 'Fair' %}selected{% endif %}>Fair</option>
+          <option value="Damaged" {% if asset.condition == 'Damaged' %}selected{% endif %}>Damaged</option>
+          <option value="Archived" {% if asset.condition == 'Archived' %}selected{% endif %}>Archived</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label>Value (UGX)</label>
+        <input type="number" name="value" class="form-control" value="{{ asset.value }}" step="0.01">
+      </div>
+	  <div class="col-md-6">
+        <label>Quantity</label>
+        <input type="text" name="qty" class="form-control" value="{{ asset.qty }}" required>
+      </div>
+    </div>
+
+    <div class="text-end">
+      <button class="btn btn-primary">Update Asset</button>
+      <a href="{{ url_for('asset_register') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

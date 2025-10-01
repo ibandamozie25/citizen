@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-primary mb-3">Employees Hub</h3>
+
+  <!-- Search -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-8">
+      <input name="q" class="form-control" placeholder="Search name, department, designation..." value="{{ q }}">
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-outline-primary w-100">Search</button>
+    </div>
+    <div class="col-md-2">
+      <a href="{{ url_for('employees_hub') }}" class="btn btn-primary w-100">Clear</a>
+    </div>
+	<div class="col-md-2">
+      <a href="{{ url_for('teachers_hub') }}" class="btn btn-primary w-100">Manage Trs</a>
+    </div>
+	<div class="col-md-2">
+      <a href="{{ url_for('employees_report') }}" class="btn btn-primary w-100">Employees Data</a>
+    </div>
+	<div class="col-md-2">
+      <a href="{{ url_for('teachers_load') }}" class="btn btn-primary w-100">Teachers Load</a>
+    </div>
+	<div class="col-md-2">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary w-100">← Back </a>
+    </div>
+  </form>
+  
+  <!-- Add New Employee -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">Add New Employee</div>
+    <div class="card-body">
+      <form method="post" class="row g-2">
+        <div class="col-md-4">
+          <label class="form-label">First Name *</label>
+          <input name="first_name" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Middle Name</label>
+          <input name="middle_name" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Last Name *</label>
+          <input name="last_name" class="form-control" required>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Gender</label>
+          <select name="gender" class="form-select">
+            <option value="">--</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Contact</label>
+          <input name="contact" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Residence</label>
+          <input name="residence" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Department</label>
+          <input name="department" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Designation</label>
+          <input name="designation" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Hire Date</label>
+          <input type="date" name="hire_date" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="active" selected>Active</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Base Salary</label>
+          <input type="number" step="0.01" name="base_salary" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Allowance</label>
+          <input type="number" step="0.01" name="allowance" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Bonus</label>
+          <input type="number" step="0.01" name="bonus" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Pay Cycle</label>
+          <select name="pay_cycle" class="form-select">
+            <option value="monthly" selected>Monthly</option>
+            <option value="termly">Termly</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Bank</label>
+          <input name="bank_name" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Bank Account</label>
+          <input name="bank_account" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">TIN</label>
+          <input name="tin" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Notes</label>
+          <input name="notes" class="form-control">
+        </div>
+
+        <div class="col-12 text-end mt-2">
+          <button class="btn btn-success">Add Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Employees List -->
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th>
+          <th>Designation</th>
+          <th>Department</th>
+          <th>Contact</th>
+          <th>Status</th>
+          <th class="text-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for emp in employees %}
+        <tr>
+          <td>{{ emp.first_name }} {{ emp.middle_name }} {{ emp.last_name }}</td>
+          <td>{{ emp.designation or '-' }}</td>
+          <td>{{ emp.department or '-' }}</td>
+          <td>{{ emp.contact or '-' }}</td>
+          <td>
+            <span class="badge {% if emp.status=='active' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ emp.status }}
+            </span>
+          </td>
+          <td class="text-nowrap">
+            <a href="{{ url_for('employee_edit', eid=emp.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+            <form method="post" action="{{ url_for('employee_delete', eid=emp.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete {{ emp.first_name }} {{ emp.last_name }}?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center">No employees found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

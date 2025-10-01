@@ -1,0 +1,69 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="text-primary mb-3">Edit Student</h4>
+
+  <form method="post" class="border rounded p-3">
+    <div class="row g-3">
+      <div class="col-md-4"><label class="form-label">First Name</label><input name="first_name" class="form-control" value="{{ s.first_name }}" required></div>
+      <div class="col-md-4"><label class="form-label">Middle Name</label><input name="middle_name" class="form-control" value="{{ s.middle_name }}"></div>
+      <div class="col-md-4"><label class="form-label">Last Name</label><input name="last_name" class="form-control" value="{{ s.last_name }}" required></div>
+
+      <div class="col-md-3">
+        <label class="form-label">Sex</label>
+        <select name="sex" class="form-select" required>
+          <option value="M" {{ 'selected' if s.sex=='M' else '' }}>M</option>
+          <option value="F" {{ 'selected' if s.sex=='F' else '' }}>F</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Section</label>
+        <select name="section" class="form-select" required>
+          <option value="Day" {{ 'selected' if s.section=='Day' else '' }}>Day</option>
+          <option value="Boarding" {{ 'selected' if s.section=='Boarding' else '' }}>Boarding</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Class</label>
+        <select name="class_name" class="form-select" required>
+          {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if s.class_name==c else '' }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Stream</label>
+        <select name="stream" class="form-select" required>
+          {% for x in streams %}
+          <option value="{{ x }}" {{ 'selected' if s.stream==x else '' }}>{{ x }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3"><label class="form-label">House</label>
+        <select name="house" class="form-select">
+          <option value="">--</option>
+          {% for h in houses %}
+          <option value="{{ h }}" {{ 'selected' if s.house==h else '' }}>{{ h }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3"><label class="form-label">Parent 1 Name</label><input name="parent_name" class="form-control" value="{{ s.parent_name }}"></div>
+      <div class="col-md-3"><label class="form-label">Parent 1 Phone</label><input name="parent_contact" class="form-control" value="{{ s.parent_contact }}"></div>
+      <div class="col-md-3"><label class="form-label">Parent 2 Name</label><input name="parent2_name" class="form-control" value="{{ s.parent2_name }}"></div>
+      <div class="col-md-3"><label class="form-label">Parent 2 Phone</label><input name="parent2_contact" class="form-control" value="{{ s.parent2_contact }}"></div>
+      <div class="col-md-4"><label class="form-label">Parent Email</label><input name="parent_email" class="form-control" value="{{ s.parent_email }}"></div>
+      <div class="col-md-8"><label class="form-label">Residence</label><input name="residence" class="form-control" value="{{ s.residence }}"></div>
+
+      <div class="col-md-4"><label class="form-label">Student Number</label><input name="student_number" class="form-control" value="{{ s.student_number }}"></div>
+      <div class="col-md-4"><label class="form-label">Fees Code</label><input name="fees_code" class="form-control" value="{{ s.fees_code }}"></div>
+    </div>
+
+    <div class="text-end mt-3">
+      <button class="btn btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

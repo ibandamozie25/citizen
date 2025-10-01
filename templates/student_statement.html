@@ -1,0 +1,233 @@
+
+{% extends "base.html" %}
+{% block content %}
+<style>
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+  @media print {
+    body * { visibility: hidden; }
+    .statement-area, .statement-area * { visibility: visible; }
+    .statement-area { position: absolute; left: 0; top: 0; width: 100%; }
+    .card { border: none !important; box-shadow: none !important; }
+    .no-print, nav, header, footer, .sidebar { display: none !important; }
+
+    body { font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .table th, .table td { padding: .25rem .3rem !important; line-height: 1.2; font-size: 10px; }
+    tr, td, th, thead, tbody { break-inside: avoid; page-break-inside: avoid; }
+
+    body.compact-print { font-size: 9px; }
+    body.compact-print .table th, body.compact-print .table td {
+      font-size: 8px !important; padding: .2rem .25rem !important;
+    }
+  }
+
+  .statement-header { border-bottom: 3px solid #0d6efd; }
+  .meta small { color: #6c757d; }
+  .totals .label { color:#0d6efd; font-weight:600; }
+  .waterline { border-top: 2px dashed #ccc; margin: 1rem 0; }
+  .receipt-badge { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+</style>
+
+<div class="container mt-3 statement-area">
+  <!-- Top controls -->
+  <div class="d-flex justify-content-between align-items-center no-print mb-2">
+    <a class="btn btn-primary btn-sm" href="{{ url_for('student_statement') }}">&larr; Back To Statement</a>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('students') }}">&larr; Back To Student List</a>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary btn-sm" onclick="printNormal()"><i class="bi bi-printer"></i> Print</button>
+      <button class="btn btn-primary btn-sm" onclick="printCompact()"><i class="bi bi-printer"></i> Compact Print</button>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <!-- Header -->
+      <div class="row align-items-center statement-header pb-3 mb-3">
+        <div class="col-auto">
+          <img src="{{ school.logo_url }}" alt="Logo" style="height:64px; width:auto;">
+        </div>
+        <div class="col">
+          <h4 class="mb-0">{{ school.name }}</h4>
+          <div class="meta">
+            <small>{{ school.address }}</small><br>
+            <small>Tel: {{ school.phone }}</small>
+          </div>
+        </div>
+        <div class="col-auto text-end">
+          <h5 class="mb-0">Student Statement</h5>
+          <small>Generated: {{ today }}</small><br>
+          <small>Active Session: {{ active_term }} {{ active_year }}</small>
+        </div>
+      </div>
+
+      <!-- Student info -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div><strong>Student:</strong> {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</div>
+          <div><strong>Student No.:</strong> {{ student.student_number }}</div>
+          <div><strong>Class / Stream:</strong> {{ student.class_name }} {{ student.stream or '' }}</div>
+        </div>
+        <div class="col-md-6">
+          <div><strong>Section:</strong> {{ student.section or '-' }}</div>
+          <div><strong>Parent:</strong> {{ student.parent_name or '-' }}</div>
+          <div><strong>Contact:</strong> {{ student.parent_contact or '-' }}</div>
+        </div>
+      </div>
+
+      <div class="waterline"></div>
+
+      <!-- Financial summary (current term) -->
+      <div class="row g-3 totals">
+        <div class="col-md-4">
+          <div><span class="label">Expected Fees (Term):</span> UGX {{ "{:,.0f}".format(fin.expected_fees or 0) }}</div>
+          <div><span class="label">Expected Requirements:</span> UGX {{ "{:,.0f}".format(fin.expected_requirements or 0) }}</div>
+          <div><span class="label">Bursary (Term):</span> UGX {{ "{:,.0f}".format(fin.bursary_current or 0) }}</div>
+        </div>
+        <div class="col-md-4">
+          <div><span class="label">Paid Fees (Term):</span> UGX {{ "{:,.0f}".format(fin.paid_fees or 0) }}</div>
+          <div><span class="label">Paid Requirements (Term):</span> UGX {{ "{:,.0f}".format(fin.paid_requirements or 0) }}</div>
+          <div><span class="label">Carry Forward (incl. OB):</span> UGX {{ "{:,.0f}".format(fin.carry_forward or 0) }}</div>
+        </div>
+        <div class="col-md-4">
+          <div><span class="label">Total Due (This Term):</span> UGX {{ "{:,.0f}".format(fin.total_due_this_term or 0) }}</div>
+          <div><span class="label">Balance (This Term):</span> UGX {{ "{:,.0f}".format(fin.balance_this_term or 0) }}</div>
+          <div class="fs-5 mt-2">
+            <span class="label">Overall Outstanding:</span>
+            <strong>UGX {{ "{:,.0f}".format(fin.overall_balance or 0) }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="waterline"></div>
+
+      <!-- Transactions grouped by Year/Term -->
+      {% for y, terms in grouped.items()|sort %}
+        <h6 class="mt-3">{{ y }}</h6>
+
+        {% set ordered_terms = ['Term 1','Term 2','Term 3'] %}
+        {% for t in ordered_terms %}
+          {% if terms.get(t) %}
+            {% set rows = terms[t] %}
+            <div class="table-responsive mb-3">
+              <table class="table table-sm table-striped align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Receipt No</th>
+                    <th>Date</th>
+                    <th>Term</th>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Item</th>
+                    <th class="text-end">Paid (UGX)</th>
+                    <th class="text-end">Expected (UGX)</th>
+                    <th class="text-end">Bursary (UGX)</th>
+                    <th class="text-end">Carry Fwd (UGX)</th>
+                    <th>Comment</th>
+                    {% if session.get('role') == 'admin' %}
+                      <th class="no-print">Actions</th>
+                    {% endif %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in rows %}
+                  <tr>
+                    <td class="receipt-badge"><strong>{{ r.receipt_no or '—' }}</strong></td>
+                    <td>{{ r.date_paid or '' }}</td>
+                    <td>{{ r.term or '' }}</td>
+                    <td>{{ r.payment_type|capitalize }}</td>
+                    <td>{{ r.method or '' }}</td>
+                    <td>{% if r.payment_type == 'requirements' %}{{ r.requirement_name }}{% else %}—{% endif %}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.amount_paid or 0) }}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.expected_amount or 0) }}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.bursary_amount or 0) }}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.carried_forward or 0) }}</td>
+                    <td>{{ r.comment }}</td>
+                    {% if session.get('role') == 'admin' %}
+                    <td class="no-print">
+                      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('fees_edit', fee_id=r.id) }}">Edit</a>
+                      <a class="btn btn-sm btn-outline-success" href="{{ url_for('reprint_receipt', fee_id=r.id) }}">
+                        <i class="bi bi-printer"></i> Reprint
+                      </a>
+                    </td>
+                    {% endif %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        {% for t, rows in terms|dictsort %}
+          {% if t not in ordered_terms %}
+            <div class="table-responsive mb-3">
+              <table class="table table-sm table-striped align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Receipt No</th>
+                    <th>Date</th>
+                    <th>Term</th>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Item</th>
+                    <th class="text-end">Paid (UGX)</th>
+                    <th class="text-end">Expected (UGX)</th>
+                    <th class="text-end">Bursary (UGX)</th>
+                    <th class="text-end">Carry Fwd (UGX)</th>
+                    <th>Comment</th>
+                    {% if session.get('role') == 'admin' %}
+                      <th class="no-print">Actions</th>
+                    {% endif %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in rows %}
+                  <tr>
+                    <td class="receipt-badge"><strong>{{ r.receipt_no or '—' }}</strong></td>
+                    <td>{{ r.date_paid or '' }}</td>
+                    <td>{{ r.term or '' }}</td>
+                    <td>{{ r.payment_type|capitalize }}</td>
+                    <td>{{ r.method or '' }}</td>
+                    <td>{% if r.payment_type == 'requirements' %}{{ r.requirement_name }}{% else %}—{% endif %}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.amount_paid or 0) }}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.expected_amount or 0) }}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.bursary_amount or 0) }}</td>
+                    <td class="text-end">{{ "{:,.0f}".format(r.carried_forward or 0) }}</td>
+                    <td>{{ r.comment }}</td>
+                    {% if session.get('role') == 'admin' %}
+                    <td class="no-print">
+                      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('fees_edit', fee_id=r.id) }}">Edit</a>
+                      <a class="btn btn-sm btn-outline-success" href="{{ url_for('reprint_receipt', fee_id=r.id) }}">
+                        <i class="bi bi-printer"></i> Reprint
+                      </a>
+                    </td>
+                    {% endif %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+
+      <!-- Footer / signature -->
+      <div class="mt-3">
+        <div class="row">
+          <div class="col"><strong>Prepared by:</strong> ________________________</div>
+          <div class="col"><strong>Signature/Stamp:</strong> ____________________</div>
+          <div class="col text-end"><span class="text-muted">This is a system-generated statement.</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function printNormal() { document.body.classList.remove('compact-print'); window.print(); }
+  function printCompact() { document.body.classList.add('compact-print'); window.print(); setTimeout(() => document.body.classList.remove('compact-print'), 500); }
+</script>
+{% endblock %}

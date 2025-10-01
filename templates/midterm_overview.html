@@ -1,0 +1,64 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+  <h4>Mid-Term Overview — {{ class_name }} — {{ term }} {{ year }}</h4>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>Student No.</th><th>Name</th>
+          {% for code in subj_order %}
+            <th class="text-center" colspan="4">{{ code }}</th>
+          {% endfor %}
+        </tr>
+        <tr>
+          <th></th><th></th><th></th>
+          {% for code in subj_order %}
+            <th class="text-center">BOT</th>
+            <th class="text-center">Holiday</th>
+            <th class="text-center">Other</th>
+            <th class="text-center"><strong>MID</strong></th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td class="text-nowrap">{{ r.student_number }}</td>
+            <td class="text-nowrap">{{ r.name }}</td>
+            {% for s in r.subjects %}
+              <td class="text-center">
+                {{ s.bot.mark if s.bot.mark is not none else '–' }}<br>
+                <small class="text-muted">{{ s.bot.grade or '' }}</small>
+              </td>
+              <td class="text-center">
+                {{ s.holiday.mark if s.holiday.mark is not none else '–' }}<br>
+                <small class="text-muted">{{ s.holiday.grade or '' }}</small>
+              </td>
+              <td class="text-center">
+                {{ s.other.mark if s.other.mark is not none else '–' }}<br>
+                <small class="text-muted">{{ s.other.grade or '' }}</small>
+              </td>
+              <td class="text-center">
+                <strong>{{ s.mid.mark if s.mid.mark is not none else '–' }}</strong><br>
+                <small class="text-muted"><strong>{{ s.mid.grade or '' }}</strong></small>
+              </td>
+            {% endfor %}
+          </tr>
+          <tr class="table-light">
+            <td></td><td></td><td class="text-muted"><small>Comments</small></td>
+            {% for s in r.subjects %}
+              <td><small>{{ s.bot.comment or '' }}</small></td>
+              <td><small>{{ s.holiday.comment or '' }}</small></td>
+              <td><small>{{ s.other.comment or '' }}</small></td>
+              <td><small><strong>{{ s.mid.comment or '' }}</strong></small></td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

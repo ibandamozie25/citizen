@@ -1,0 +1,72 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 border p-4 rounded bg-light" style="max-width: 900px;">
+  <h4 class="text-center text-primary">Add Other Income</h4>
+  <form method="POST">
+    <div class="row">
+      <div class="col-md-6">
+        <label>Source:</label>
+        <input type="text" name="source" value="{{ preview.source if preview else '' }}" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label>Amount:</label>
+        <input type="number" name="amount" step="0.01" value="{{ preview.amount if preview else '' }}" class="form-control" required>
+      </div>
+      <div class="col-md-6 mt-3">
+        <label>Term:</label>
+        <select name="term" class="form-control" required>
+          <option value="">--Select Term--</option>
+          <option value="Term 1" {% if preview.term == 'Term 1' %}selected{% endif %}>Term 1</option>
+          <option value="Term 2" {% if preview.term == 'Term 2' %}selected{% endif %}>Term 2</option>
+          <option value="Term 3" {% if preview.term == 'Term 3' %}selected{% endif %}>Term 3</option>
+        </select>
+      </div>
+      <div class="col-md-6 mt-3">
+        <label>Year:</label>
+        <input type="number" name="year" value="{{ preview.year if preview else '' }}" class="form-control" required>
+      </div>
+      <div class="col-md-12 mt-3">
+        <label>Description:</label>
+        <textarea name="description" class="form-control" rows="2">{{ preview.description if preview else '' }}</textarea>
+      </div>
+      <div class="col-md-6 mt-3">
+        <label>Date Received:</label>
+        <input type="date" name="date_received" value="{{ preview.date_received if preview else '' }}" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="mt-4 text-end">
+      <button type="submit" name="preview" class="btn btn-info">Preview</button>
+    </div>
+
+    {% if preview %}
+    <div class="mt-4 p-3 bg-white border rounded">
+      <h5 class="text-center text-success">Preview Details</h5>
+      <table class="table table-bordered text-center">
+        <thead class="table-secondary">
+          <tr>
+            <th>Source</th><th>Amount</th><th>Term</th><th>Year</th><th>Date</th><th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{ preview.source }}</td>
+            <td>{{ preview.amount }}</td>
+            <td>{{ preview.term }}</td>
+            <td>{{ preview.year }}</td>
+            <td>{{ preview.date_received }}</td>
+            <td>{{ preview.description }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="text-end">
+        <button type="submit" name="confirm" class="btn btn-success">Confirm & Save</button>
+      </div>
+    </div>
+    {% endif %}
+	
+	<a href="{{ url_for('finance_hub') }}" class="btn btn-primary">← Back </a>
+  </form>
+</div>
+{% endblock %}

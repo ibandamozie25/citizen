@@ -1,0 +1,62 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+  <h4>P7 Archived Students</h4>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+      <select name="class" class="form-select">
+        <option value="">All Classes</option>
+        {% for c in classes %}
+        <option value="{{ c }}" {{ 'selected' if q_class==c else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="year" class="form-select">
+        <option value="">All Years</option>
+        {% for y in years %}
+        <option value="{{ y }}" {{ 'selected' if q_year==y|string else '' }}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <input name="last_name" value="{{ q_lname or '' }}" class="form-control" placeholder="Last name">
+    </div>
+    <div class="col-md-3">
+      <button class="btn btn-primary">Filter</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped">
+      <thead class="table-light">
+        <tr>
+          <th>Student No.</th><th>Name</th><th>Class</th><th>Year Completed</th>
+          <th>Outstanding</th><th>Archived On</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.student_number }}</td>
+          <td>{{ r.full_name }}</td>
+          <td>{{ r.class_name }}</td>
+          <td>{{ r.year_completed }}</td>
+          <td>{{ "{:,.0f}".format(r.outstanding_balance or 0) }}</td>
+          <td>{{ r.archived_on }}</td>
+          <td>
+            <form method="post" action="{{ url_for('unarchive_student', student_id=r.student_id) }}" onsubmit="return confirm('Restore this student?');">
+              <button class="btn btn-sm btn-outline-secondary">Unarchive</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted">No archived students.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

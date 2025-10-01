@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-warning mb-3">Edit Employee</h3>
+
+  <form method="post" class="row g-2">
+    <div class="col-md-4">
+      <label class="form-label">First Name</label>
+      <input name="first_name" class="form-control" value="{{ emp.first_name }}" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Middle Name</label>
+      <input name="middle_name" class="form-control" value="{{ emp.middle_name }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Last Name</label>
+      <input name="last_name" class="form-control" value="{{ emp.last_name }}" required>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Gender</label>
+      <select name="gender" class="form-select">
+        <option value="">--</option>
+        <option value="M" {% if emp.gender=='M' %}selected{% endif %}>Male</option>
+        <option value="F" {% if emp.gender=='F' %}selected{% endif %}>Female</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Contact</label>
+      <input name="contact" class="form-control" value="{{ emp.contact }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" value="{{ emp.email }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Residence</label>
+      <input name="residence" class="form-control" value="{{ emp.residence }}">
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Department</label>
+      <input name="department" class="form-control" value="{{ emp.department }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Designation</label>
+      <input name="designation" class="form-control" value="{{ emp.designation }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hire Date</label>
+      <input type="date" name="hire_date" class="form-control" value="{{ emp.hire_date }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Status</label>
+      <select name="status" class="form-select">
+        <option value="active" {% if emp.status=='active' %}selected{% endif %}>Active</option>
+        <option value="archived" {% if emp.status=='archived' %}selected{% endif %}>Archived</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Base Salary</label>
+      <input type="number" step="0.01" name="base_salary" class="form-control" value="{{ emp.base_salary }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Allowance</label>
+      <input type="number" step="0.01" name="allowance" class="form-control" value="{{ emp.allowance }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Bonus</label>
+      <input type="number" step="0.01" name="bonus" class="form-control" value="{{ emp.bonus }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Pay Cycle</label>
+      <select name="pay_cycle" class="form-select">
+        <option value="monthly" {% if emp.pay_cycle=='monthly' %}selected{% endif %}>Monthly</option>
+        <option value="termly" {% if emp.pay_cycle=='termly' %}selected{% endif %}>Termly</option>
+        <option value="weekly" {% if emp.pay_cycle=='weekly' %}selected{% endif %}>Weekly</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Bank</label>
+      <input name="bank_name" class="form-control" value="{{ emp.bank_name }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Bank Account</label>
+      <input name="bank_account" class="form-control" value="{{ emp.bank_account }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">TIN</label>
+      <input name="tin" class="form-control" value="{{ emp.tin }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Notes</label>
+      <input name="notes" class="form-control" value="{{ emp.notes }}">
+    </div>
+
+    <div class="col-12 mt-3">
+      <button class="btn btn-success">Save</button>
+      <a href="{{ url_for('employees_hub') }}" class="btn btn-secondary">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

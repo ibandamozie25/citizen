@@ -1,0 +1,143 @@
+
+{% extends "base.html" %}
+{% import 'partials/students_macros.html' as sm %}
+{% block content %}
+<div class="container mt-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">Promotions Hub</h4>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('promotions_history') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-clock-history"></i> History
+      </a>
+      <a href="{{ url_for('archive_hub') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-archive"></i> Archive Hub
+      </a>
+
+      {# School-wide promotion — atomic: P7→Archive then cascade Baby→…→P6 #}
+      <form method="post" action="{{ url_for('promotions_schoolwide') }}" class="d-inline"
+            onsubmit="return {{ 'false' if promotion_done else 'confirm(\"Run school-wide promotion? This can only be done once per academic year. P7 will be archived.\")' }};">
+        {# {{ csrf_token() }} #}
+        <button class="btn btn-danger btn-sm"
+                {% if promotion_done %}disabled title="Already completed for {{ promotion_year }}"{% endif %}>
+          <i class="bi bi-arrow-up-circle"></i>
+          Run School-wide Promotion
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {# ===== Lock banner ===== #}
+  {% if promotion_done %}
+    <div class="alert alert-info d-flex align-items-start gap-2 mt-3" role="alert">
+      <i class="bi bi-info-circle fs-5"></i>
+      <div>
+        <strong>Promotion locked:</strong> School-wide promotion has already been completed for
+        <strong>{{ promotion_year }}</strong>. You can still perform <em>per-student demotions</em> from
+        <a href="{{ url_for('promotions_history') }}">Promotions History</a>.
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-warning d-flex align-items-start gap-2 mt-3" role="alert">
+      <i class="bi bi-exclamation-triangle fs-5"></i>
+      <div>
+        <strong>Not yet promoted for {{ promotion_year }}</strong>.
+        Use <em>Run School-wide Promotion</em> to promote Baby→…→P6 and archive P7 leavers.
+        You can also use the <em>Class → Class</em> form below for a direct mapping if needed.
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Class → Class promotion -->
+  <form method="post" action="{{ url_for('promotions_commit') }}" class="row g-2 mt-2" id="classMapForm">
+    {# {{ csrf_token() }} #}
+    <div class="col-md-4">
+      <label class="form-label">Source class</label>
+      <select name="source_class" class="form-select" required>
+        <option value="">— choose —</option>
+        {% for c in classes %}
+          <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Target class</label>
+      <select name="target_class" class="form-select" required>
+        <option value="">— choose —</option>
+        {% for c in classes %}
+          <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button class="btn btn-primary w-100"
+              {% if promotion_done %}disabled title="School-wide promotion already done for {{ promotion_year }}"{% endif %}>
+        Promote Class → Class
+      </button>
+    </div>
+  </form>
+
+  <!-- Filters -->
+  <form method="get" class="row g-2 mt-3">
+    <div class="col-md-3">
+      <label class="form-label">Class</label>
+      <select name="class" class="form-select">
+        <option value="">All</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if c==f_class else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Stream</label>
+      <select name="stream" class="form-select">
+        <option value="">All</option>
+        {% for s in streams %}
+          <option value="{{ s }}" {{ 'selected' if s==f_stream else '' }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Status</label>
+      <select name="status" class="form-select">
+        <option value="all" {{ 'selected' if f_status=='all' else '' }}>All</option>
+        <option value="active" {{ 'selected' if f_status=='active' else '' }}>Active</option>
+        <option value="archived" {{ 'selected' if f_status=='archived' else '' }}>Archived</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Student No. / Name</label>
+      <input name="q" value="{{ q }}" class="form-control" placeholder="e.g. STU001 or Okello">
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Search</button>
+    </div>
+  </form>
+
+  <!-- Optional preview block -->
+  {% if preview_students %}
+    {{ sm.render_preview_list(preview_students, source_class, target_class) }}
+    <form method="post" action="{{ url_for('promotions_commit') }}" class="mb-3">
+      {# {{ csrf_token() }} #}
+      <input type="hidden" name="source_class" value="{{ source_class }}">
+      <input type="hidden" name="target_class" value="{{ target_class }}">
+      <button class="btn btn-success"
+              {% if promotion_done %}disabled title="School-wide promotion already done for {{ promotion_year }}"{% endif %}>
+        Confirm Promotion
+      </button>
+      <a href="{{ url_for('promotions_hub') }}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+  {% endif %}
+
+  <!-- Active students table -->
+  {{ sm.render_active_students_table(students, show_demote=False) }}
+</div>
+
+<script>
+  // Extra guard so you never POST empty values to promotions_commit
+  document.getElementById('classMapForm')?.addEventListener('submit', function (e) {
+    const src = this.querySelector('[name="source_class"]').value.trim();
+    const dst = this.querySelector('[name="target_class"]').value.trim();
+    if (!src || !dst) { e.preventDefault(); alert('Pick both Source and Target classes.'); }
+  });
+</script>
+{% endblock %}

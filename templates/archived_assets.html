@@ -1,0 +1,30 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h2>Archived Assets</h2>
+
+<table border="1" style="width:100%; text-align:center;">
+  <thead>
+    <tr><th>Name</th><th>Model</th><th>Year</th><th>Reason</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for asset in assets %}
+      <tr>
+        <td>{{ asset['name'] }}</td>
+        <td>{{ asset['model'] }}</td>
+        <td>{{ asset['year_purchased'] }}</td>
+        <td>{{ asset['archived_reason'] }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('reactivate_asset', asset_id=asset['id']) }}">
+            <input type="submit" value="Reactivate">
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div style="text-align:center; margin-top:20px;">
+  <a href="{{ url_for('dashboard') }}"><button>Back to Dashboard</button></a>
+</div>
+{% endblock %}

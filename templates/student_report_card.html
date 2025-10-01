@@ -1,0 +1,119 @@
+
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  @media print {
+    .no-print { display: none; }
+    body { font-size: 12pt; }
+  }
+</style>
+
+<div class="container mt-4 bg-white p-4 border rounded shadow">
+
+  <!-- Header -->
+  <div class="text-center mb-4">
+    <img src="{{ url_for('static', filename='school_logo.png') }}" width="80">
+    <h4 class="mt-2 mb-0"><strong>YOUR SCHOOL NAME</strong></h4>
+    <p class="mb-0">P.O. Box 1234, Kampala | Tel: +256 700 000000</p>
+    <hr>
+    <h5><strong>Student Report Card</strong></h5>
+  </div>
+
+  <!-- Filter -->
+  <form method="GET" class="row g-2 mb-3 no-print">
+    <input type="hidden" name="student_id" value="{{ student.id }}">
+
+    <div class="col-md-3">
+      <select name="year" class="form-control" required>
+        <option value="">Select Year</option>
+        {% for y in years %}
+          <option value="{{ y.year }}" {% if year == y.year %}selected{% endif %}>{{ y.year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <select name="term" class="form-control" required>
+        <option value="">Select Term</option>
+        {% for t in terms %}
+          <option value="{{ t.term }}" {% if term == t.term %}selected{% endif %}>Term {{ t.term }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <button class="btn btn-outline-primary">View</button>
+      <button onclick="window.print()" type="button" class="btn btn-outline-dark">Print</button>
+    </div>
+  </form>
+
+  <!-- Student Info -->
+  <div class="mb-3">
+    <strong>Name:</strong> {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}<br>
+    <strong>Class:</strong> {{ student.class_name }} {{ student.stream }}<br>
+    <strong>Term:</strong> {{ term }} | <strong>Year:</strong> {{ year }}
+  </div>
+
+  {% if reports %}
+    <!-- Report Table -->
+    <table class="table table-bordered table-striped text-center">
+      <thead class="table-secondary">
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>Part</th>
+          <th>BOT</th>
+          <th>Mid</th>
+          <th>EOT</th>
+          <th>Avg</th>
+          <th>Grade</th>
+          <th>Comment</th>
+          <th>Teacher</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ r.subject_name }}</td>
+            <td>{{ r.paper_name or '-' }}</td>
+            <td>{{ r.bot_mark }}</td>
+            <td>{{ r.midterm_mark }}</td>
+            <td>{{ r.eot_mark }}</td>
+            <td>{{ "%.1f"|format(r.average) }}</td>
+            <td>{{ r.grade }}</td>
+            <td>{{ r.comment }}</td>
+            <td>{{ r.teacher_initials }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Remarks -->
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <label><strong>Teacher's Remark:</strong></label>
+        <p class="border p-2">{{ reports[0].teacher_remark or '__________________' }}</p>
+      </div>
+      <div class="col-md-6">
+        <label><strong>Headteacher's Remark:</strong></label>
+        <p class="border p-2">{{ reports[0].headteacher_remark or '__________________' }}</p>
+      </div>
+    </div>
+
+    <!-- Cumulative Score Section -->
+    <div class="mt-4">
+      <h6><strong>Cumulative Performance</strong></h6>
+      <p><strong>Cumulative Average:</strong> {{ cumulative.average or 'N/A' }}</p>
+      <p><strong>Overall Grade:</strong> {{ cumulative.grade or 'N/A' }}</p>
+      <p><strong>Comment:</strong> {{ cumulative.comment or 'N/A' }}</p>
+    </div>
+
+  {% else %}
+    <div class="alert alert-info text-center">No report found for the selected term and year.</div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

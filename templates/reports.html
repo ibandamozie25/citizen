@@ -1,0 +1,90 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h2>Processed Report Cards</h2>
+
+<!-- Filter Form -->
+<form method="POST" style="margin-bottom: 20px; text-align: center;">
+  <select name="level">
+    <option value="">--Level--</option>
+    <option value="O">O Level</option>
+    <option value="A">A Level</option>
+  </select>
+
+  <select name="class">
+    <option value="">--Class--</option>
+    {% for cls in ['S1','S2','S3','S4','S5','S6'] %}
+      <option value="{{ cls }}">{{ cls }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="term">
+    <option value="">--Term--</option>
+    <option value="Term 1">Term 1</option>
+    <option value="Term 2">Term 2</option>
+    <option value="Term 3">Term 3</option>
+  </select>
+
+  <input type="number" name="year" placeholder="Year" required>
+  <input type="text" name="search" placeholder="Student Name or Number">
+  <button type="submit">Filter</button>
+</form>
+
+<!-- Result Table -->
+{% if results %}
+<table border="1" cellpadding="6" cellspacing="0" width="100%">
+  <thead style="background-color: #f0f0f0;">
+    <tr>
+      <th>#</th>
+      <th>Student</th>
+      <th>Student No.</th>
+      <th>Level</th>
+      <th>Class</th>
+      <th>Term</th>
+      <th>Year</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in results %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ r['first_name'] }} {{ r['middle_name'] }} {{ r['last_name'] }}</td>
+      <td>{{ r['student_number'] }}</td>
+      <td>{{ r['level'] }}</td>
+      <td>{{ r['class'] }}</td>
+      <td>{{ r['term'] }}</td>
+      <td>{{ r['year'] }}</td>
+      <td>
+        <a href="{{ url_for('print_report', student_id=r['student_id'], term=r['term'], year=r['year']) }}" target="_blank">
+          Print
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Print Batch Option -->
+<div style="margin-top: 30px; text-align: center;">
+  <form method="POST" action="{{ url_for('print_batch') }}" target="_blank" style="display: inline-block; padding: 20px; border: 1px solid #ccc; background: #f9f9f9;">
+    <input type="hidden" name="term" value="{{ request.form.term }}">
+    <input type="hidden" name="year" value="{{ request.form.year }}">
+    <input type="hidden" name="level" value="{{ request.form.level }}">
+    <input type="hidden" name="class" value="{{ request.form.class }}">
+
+    <label><strong>Select Print Option:</strong></label>
+    <select name="mode" required>
+      <option value="all">Print All in Filter</option>
+      <option value="class">Print By Class</option>
+      <option value="individual">Print Individual</option>
+    </select>
+
+    <input type="text" name="student_id" placeholder="Student ID (for individual)">
+    <button type="submit">Print</button>
+  </form>
+</div>
+{% else %}
+<p style="text-align: center; color: red;">No processed reports found. Please run <a href="{{ url_for('process_reports') }}">Process Reports</a> first.</p>
+{% endif %}
+{% endblock %}

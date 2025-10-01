@@ -1,0 +1,117 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  /* make these buttons use red text */
+  .btn-dark, .btn-warning, .btn-danger {
+    color:#ff0000 !important;
+  }
+  /* when used as tabs, the active state also needs overriding */
+  .btn-dark.active, .btn-warning.active, .btn-danger.active {
+    color:#ff0000 !important;
+  }
+</style>
+
+<div class="container mt-4">
+  <h3 class="mb-3">Fees Payment Report (Term {{ term }}, {{ year }})</h3>
+
+  <!-- Filters -->
+  <form method="GET" class="row mb-4">
+    <div class="col-md-3">
+      <label for="class_name">Class</label>
+      <select name="class_name" class="form-control">
+        <option value="">All</option>
+        {% for c in ['Baby','Middle','Top','P1','P2','P3','P4','P5','P6','P7'] %}
+          <option value="{{ c }}" {% if request.args.get('class_name') == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="stream">Stream</label>
+      <select name="stream" class="form-control">
+        <option value="">All</option>
+        {% for s in ['A'] %}
+          <option value="{{ s }}" {% if request.args.get('stream') == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="status">Status</label>
+      <select name="status" class="form-control">
+        <option value="">All</option>
+        <option value="full" {% if request.args.get('status') == 'full' %}selected{% endif %}>Fully Paid</option>
+        <option value="partial" {% if request.args.get('status') == 'partial' %}selected{% endif %}>Partially Paid</option>
+        <option value="none" {% if request.args.get('status') == 'none' %}selected{% endif %}>Not Paid</option>
+      </select>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+  </form>
+
+  <a href="{{ url_for('export_fees_report', **request.args) }}" class="btn btn-success mb-3">Export to CSV</a>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">← Back</a>
+
+  <ul class="nav nav-tabs" id="reportTabs" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link btn btn-dark me-2 active" data-bs-toggle="tab" data-bs-target="#full">Fully Paid</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link btn btn-warning me-2" data-bs-toggle="tab" data-bs-target="#partial">Partially Paid</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link btn btn-danger" data-bs-toggle="tab" data-bs-target="#none">Not Paid</button>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3">
+    {% for category in ['full', 'partial', 'none'] %}
+      <div class="tab-pane fade {% if category == 'full' %}show active{% endif %}" id="{{ category }}">
+        <h5 class="mb-2">{{ category|capitalize }} Payment</h5>
+        {% set students = report.get(category, []) %}
+        <table class="table table-bordered table-sm">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Number</th>
+              <th>Full Name</th>
+              <th>Class</th>
+              <th>Expected</th>
+              <th>Bursary</th>
+              <th>Carried</th>
+              <th>Final Expected</th>
+              <th>Paid</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ s.student.student_number }}</td>
+                <td>{{ s.student.first_name }} {{ s.student.last_name }}</td>
+                <td>{{ s.student.class_name }}</td>
+                <td>UGX {{ '{:,.0f}'.format(s.expected or 0) }}</td>
+                <td>UGX {{ '{:,.0f}'.format(s.bursary or 0) }}</td>
+                <td>UGX {{ '{:,.0f}'.format(s.carried or 0) }}</td>
+                <td>UGX {{ '{:,.0f}'.format((s.expected or 0) - (s.bursary or 0) + (s.carried or 0)) }}</td>
+                <td>UGX {{ '{:,.0f}'.format(s.paid or 0) }}</td>
+                <td>UGX {{ '{:,.0f}'.format(s.balance or 0) }}</td>
+              </tr>
+            {% endfor %}
+            {% if students|length == 0 %}
+              <tr>
+                <td colspan="10" class="text-center">No students in this category.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+        <p><strong>Total:</strong> {{ students|length }} students</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

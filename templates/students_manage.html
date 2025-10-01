@@ -1,0 +1,89 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-primary m-0">Manage / Search Students</h4>
+    <div class="btn-group">
+      <a class="btn btn-outline-secondary" href="{{ url_for('register_student') }}">Register New</a>
+      <a class="btn btn-success" href="{{ url_for('start_payment') }}">Make Payment</a>
+      <a class="btn btn-outline-primary" href="{{ url_for('archive_hub') }}"><i class="bi bi-archive"></i> Archive Hub</a>
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Class</label>
+      <select name="class_name" class="form-select">
+        <option value="">All</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if c==q_class else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Student Number</label>
+      <input name="student_number" value="{{ q_num }}" class="form-control" placeholder="e.g. P7-2025-0001">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Last Name</label>
+      <input name="last_name" value="{{ q_last }}" class="form-control">
+    </div>
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      <button class="btn btn-primary">Search</button>
+      <a class="btn btn-primary" href="{{ url_for('students') }}">Clear</a>
+      <a class="btn btn-primary" href="{{ url_for('register_student') }}">← Back</a>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <thead class="table-primary">
+        <tr>
+          <th>#</th><th>Student No.</th><th>Name</th><th>Sex</th>
+          <th>Section</th><th>Class</th><th>Stream</th><th>Date Joined</th><th>Term/Year Joined</th><th>House</th>
+          <th>Fees Code</th><th>Parent 1</th><th>Parent 2</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in rows %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ s.student_number }}</td>
+          <td>{{ s.first_name }} {{ s.Middle_name or '' }} {{ s.last_name }}</td>
+          <td>{{ s.sex or '-' }}</td>
+          <td>{{ s.section or '-' }}</td>
+          <td>{{ s.class_name }}</td>
+          <td>{{ s.stream or '-' }}</td>
+          <td>{{ s.date_joined or '-' }}</td>
+          <td>{{ (s.term_joined or '-') }} {{ (s.year_of_joining or '') }}</td>
+          <td>{{ s.house or '-' }}</td>
+          <td>{{ s.fees_code or '-' }}</td>
+          <td>
+            {{ s.parent_name or '-' }}<br>
+            <small>{{ s.parent_contact or '' }}</small>
+          </td>
+          <td>
+            {{ s.parent2_name or '-' }}<br>
+            <small>{{ s.parent2_contact or '' }}</small>
+          </td>
+          <td class="text-nowrap">
+            <a class="btn btn-sm btn-warning" href="{{ url_for('edit_student', student_id=s.id) }}">Edit</a>
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('student_statement_by_id', student_id=s.id) }}">Statement</a>
+            <form method="post"
+                  action="{{ url_for('delete_student', student_id=s.id) }}"
+                  class="d-inline"
+                  onsubmit="return confirm('Archive this student?');">
+              {# {{ csrf_token() }} #}
+              <button class="btn btn-sm btn-outline-danger">Archive</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="14" class="text-center">No students found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

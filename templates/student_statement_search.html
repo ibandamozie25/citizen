@@ -1,0 +1,46 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4" style="max-width:720px">
+  <a class="btn btn-primary btn-sm mb-3" href="{{ url_for('register_student') }}">&larr; Back</a>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title mb-3">
+        Find Student Statement
+      </h5>
+      <p class="text-muted mb-4">Enter a <strong>Student Number</strong> or a <strong>Last Name</strong> and search.</p>
+
+      <form method="get" action="{{ url_for('student_statement') }}" class="row g-3">
+        <div class="col-md-6">
+          <label for="student_number" class="form-label">Student Number</label>
+          <input type="text" name="student_number" id="student_number" class="form-control" placeholder="e.g. STU001">
+        </div>
+        <div class="col-md-6">
+          <label for="last_name" class="form-label">Last Name</label>
+          <input type="text" name="last_name" id="last_name" class="form-control" placeholder="e.g. Okello">
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i> Search
+          </button>
+          <a href="{{ url_for('student_statement') }}" class="btn btn-outline-secondary">
+            Clear
+          </a>
+        </div>
+      </form>
+
+      <hr class="my-4">
+
+      <small class="text-muted">
+        Tip: If both fields are provided, the system uses the Student Number.
+      </small>
+    </div>
+  </div>
+</div>
+
+<script>
+  // focus Student Number on load
+  document.getElementById('student_number')?.focus();
+</script>
+{% endblock %}

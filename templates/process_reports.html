@@ -1,0 +1,35 @@
+
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="text-center text-primary mb-3">Process Student Reports</h4>
+
+  <form action="{{ url_for('process_reports') }}" method="POST" class="row g-3 border p-4 rounded shadow">
+    <div class="col-md-6">
+      <label>Academic Year</label>
+      <select name="year" class="form-control" required>
+        {% for y in years %}
+          <option value="{{ y.year }}" {% if y.is_active %}selected{% endif %}>
+            {{ y.year }}{% if y.is_active %} (Active){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label>Term</label>
+      <select name="term" class="form-control" required>
+        <option value="">-- Select Term --</option>
+        <option value="1">Term 1</option>
+        <option value="2">Term 2</option>
+        <option value="3">Term 3</option>
+      </select>
+    </div>
+
+    <div class="col-12 text-end">
+      <button type="submit" class="btn btn-success">Process Reports</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

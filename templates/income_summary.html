@@ -1,0 +1,15 @@
+
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Income Summary for {{ term }} {{ year }}</h2>
+  <table style="margin:auto; text-align:center;" border="1">
+    <tr><th>Category</th><th>Amount</th></tr>
+    <tr><td>Student Payments (Fees + Requirements)</td><td>{{ fees_total }}</td></tr>
+    <tr><td>Other Income (Sales, etc.)</td><td>{{ extra_income }}</td></tr>
+    <tr><td><strong>Total Income</strong></td><td><strong>{{ total_income }}</strong></td></tr>
+  </table>
+
+  <div style="text-align:center; margin-top:20px;">
+    <a href="{{ url_for('dashboard') }}"><button>Back to Dashboard</button></a>
+  </div>
+{% endblock %}

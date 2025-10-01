@@ -1,0 +1,98 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .teacher-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+	border: 1px solid #ccc;
+  }
+
+  .teacher-bordered th,
+  .teacher-bordered td {
+    border: 1px solid #dee2e6 !important;
+    vertical-align: middle;
+    text-align: center;
+	
+  }
+
+  .teacher-table th,
+  .teacher-table td {
+    vertical-align: middle;
+    text-align: center;
+	
+  }
+
+  .teacher-table {
+    border: 1px solid #dee2e6;
+  }
+</style>
+
+<div class="teacher-container">
+  <h3 class="text-center text-primary mb-4">Registered Teachers</h3>
+
+  <!-- Search/Filter Form -->
+  <form method="GET" class="row mb-4 g-3">
+    <div class="col-md-4">
+      <input type="text" name="search" class="form-control" placeholder="Search by name or initials" value="{{ request.args.get('search', '') }}">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-control">
+        <option value="">-- Filter by Status --</option>
+        <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+        <option value="archived" {% if request.args.get('status') == 'archived' %}selected{% endif %}>Archived</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+    <div class="col-md-2">
+      <a href="{{ url_for('view_teachers') }}" class="btn btn-secondary w-100">Reset</a>
+    </div>
+  </form>
+
+  {% if teachers %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover teacher-table">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Initials</th>
+          <th>Full Name</th>
+          <th>Contact</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Subjects</th>
+          <th>Classes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in teachers %}
+        <tr>
+          <td>{{ t.id }}</td>
+          <td>{{ t.initials or '' }}</td>
+          <td>{{ t.first_name }} {{ t.middle_name or '' }} {{ t.last_name }}</td>
+          <td>{{ t.contact }}</td>
+          <td>{{ t.email }}</td>
+          <td>{{ t.status }}</td>
+          <td>{{ t.subjects or 'N/A' }}</td>
+          <td>{{ t.classes or 'N/A' }}</td>
+          <td>
+            <a href="{{ url_for('edit_teacher', teacher_id=t.id) }}" class="btn btn-sm btn-warning">Edit</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-warning text-center">No teachers found matching your criteria.</div>
+  {% endif %}
+</div>
+{% endblock %}

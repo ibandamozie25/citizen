@@ -1,0 +1,169 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+
+  <h3 class="text-primary mb-4">Payroll Management</h3>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Create Payroll Row -->
+  <form method="post" class="row g-2 mb-4 border rounded p-3 bg-light shadow-sm">
+    <input type="hidden" name="action" value="create">
+    <div class="col-md-3">
+      <label class="form-label">Employee *</label>
+      <select name="employee_id" class="form-select" required>
+        <option value="">-- Select Employee --</option>
+        {% for e in employees %}
+          <option value="{{ e.id }}">{{ e.first_name }} {{ e.middle_name or '' }} {{ e.last_name }} ({{ e.designation }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Term *</label>
+      <select name="term" class="form-select" required>
+        {% for t in TERMS %}
+          <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Year *</label>
+      <input type="number" name="year" class="form-control" value="{{ default_year }}" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Expected Salary *</label>
+      <input type="number" step="0.01" name="expected_salary" class="form-control" required>
+    </div>
+    <div class="col-md-1">
+      <label class="form-label">Bonus</label>
+      <input type="number" step="0.01" name="bonus" class="form-control">
+    </div>
+    <div class="col-md-1">
+      <label class="form-label">Allowance</label>
+      <input type="number" step="0.01" name="allowance" class="form-control">
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <button type="submit" class="btn btn-success w-100">Add</button>
+    </div>
+  </form>
+
+  <!-- Filters -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-2">
+      <select name="term" class="form-select">
+        <option value="">All Terms</option>
+        {% for t in TERMS %}
+          <option value="{{ t }}" {% if sel_term == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <input type="number" name="year" class="form-control" placeholder="Year" value="{{ sel_year }}">
+    </div>
+    <div class="col-md-3">
+      <select name="employee_id" class="form-select">
+        <option value="">All Employees</option>
+        {% for e in employees %}
+          <option value="{{ e.id }}" {% if sel_emp == e.id|string %}selected{% endif %}>
+            {{ e.first_name }} {{ e.middle_name or '' }} {{ e.last_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2"><button class="btn btn-primary">Filter</button>
+    </div>
+    <div class="col-md-2"><a href="{{ url_for('payroll_hub') }}" class="btn btn-primary">Clear</a>  
+    </div>
+	<div class="col-md-2"><a href="{{ url_for('finance_hub') }}" class="btn btn-primary">← Back </a> 
+    </div>
+  </form>
+
+  <!-- Summary -->
+  <div class="alert alert-info">
+    <strong>Total Rows:</strong> {{ summary.row_count }} |
+    <strong>Total Expected:</strong> UGX {{ "{:,.0f}".format(summary.total_expected or 0) }} |
+    <strong>Paid:</strong> UGX {{ "{:,.0f}".format(summary.total_paid or 0) }} |
+    <strong>Outstanding:</strong> UGX {{ "{:,.0f}".format(summary.total_outstanding or 0) }}
+  </div>
+
+  <!-- Payroll Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Employee</th>
+          <th>Designation</th>
+          <th>Term</th>
+          <th>Year</th>
+          <th>Expected</th>
+          <th>Bonus</th>
+          <th>Allowance</th>
+          <th>Total</th>
+          <th>Paid</th>
+          <th>Status</th>
+          <th>Date Paid</th>
+          <th class="text-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in rows %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ p.first_name }} {{ p.middle_name or '' }} {{ p.last_name }}</td>
+          <td>{{ p.designation }}</td>
+          <td>{{ p.term }}</td>
+          <td>{{ p.year }}</td>
+          <td>{{ "{:,.0f}".format(p.expected_salary) }}</td>
+          <td>{{ "{:,.0f}".format(p.bonus) }}</td>
+          <td>{{ "{:,.0f}".format(p.allowance) }}</td>
+          <td>{{ "{:,.0f}".format(p.total) }}</td>
+          <td>{{ "{:,.0f}".format(p.paid_amount) }}</td>
+          <td>
+            <span class="badge 
+              {% if p.status == 'fully_paid' %} bg-success
+              {% elif p.status == 'partially_paid' %} bg-warning
+              {% else %} bg-danger {% endif %}">
+              {{ p.status }}
+            </span>
+          </td>
+          <td>{{ p.date_paid or '-' }}</td>
+          <td class="text-nowrap">
+            <!-- Add Payment -->
+            <form method="post" action="{{ url_for('payroll_add_payment', pid=p.id) }}" class="d-inline">
+              <input type="number" name="amount" step="0.01" placeholder="Amt" class="form-control form-control-sm d-inline" style="width:90px;" required>
+              <button class="btn btn-sm btn-outline-success">Pay</button>
+            </form>
+            <!-- Edit -->
+            <form method="post" action="{{ url_for('payroll_edit', pid=p.id) }}" class="d-inline">
+              <input type="number" name="expected_salary" step="0.01" value="{{ p.expected_salary }}" style="width:90px;" class="form-control form-control-sm d-inline">
+              <input type="number" name="bonus" step="0.01" value="{{ p.bonus }}" style="width:90px;" class="form-control form-control-sm d-inline">
+              <input type="number" name="allowance" step="0.01" value="{{ p.allowance }}" style="width:90px;" class="form-control form-control-sm d-inline">
+              <button class="btn btn-sm btn-outline-primary">Update</button>
+            </form>
+            <!-- Delete -->
+            <form method="post" action="{{ url_for('payroll_delete', pid=p.id) }}" class="d-inline" onsubmit="return confirm('Delete payroll row?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="13" class="text-center">No payroll records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

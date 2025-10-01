@@ -1,0 +1,31 @@
+
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+  <h3>Edit Bursary for Student {{ student_number }}</h3>
+  <form method="post" class="row g-3">
+    <div class="col-md-4">
+      <label>Sponsor Name</label>
+      <input type="text" name="sponsor_name" required class="form-control" value="{{ bursary.sponsor_name }}">
+    </div>
+    <div class="col-md-2">
+      <label>Term</label>
+      <input type="text" name="term" required class="form-control" value="{{ bursary.term }}">
+    </div>
+    <div class="col-md-2">
+      <label>Year</label>
+      <input type="number" name="year" required class="form-control" value="{{ bursary.year }}">
+    </div>
+    <div class="col-md-2">
+      <label>Amount</label>
+      <input type="number" name="amount" required class="form-control" value="{{ bursary.amount }}">
+    </div>
+    <div class="col-md-12">
+      <button type="submit" class="btn btn-primary">Update</button>
+      <a href="{{ url_for('bursaries') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

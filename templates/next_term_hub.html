@@ -1,0 +1,59 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3 text-primary">Next Term – Setup</h4>
+
+  <!-- Selector -->
+  <form class="row g-3 mb-3" method="get" action="{{ url_for('next_term_hub') }}">
+    <div class="col-md-3">
+      <label class="form-label">Year</label>
+      <input name="year" type="number" class="form-control" value="{{ sel_year }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Term</label>
+      <select name="term" class="form-select">
+        {% for t in terms %}
+          <option value="{{ t }}" {{ 'selected' if t==sel_term else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button class="btn btn-outline-primary w-100">Load</button>
+    </div>
+  </form>
+
+  <!-- Editor -->
+  <form method="post" class="row g-3">
+    <input type="hidden" name="action" value="save">
+    <input type="hidden" name="year" value="{{ sel_year }}">
+    <input type="hidden" name="term" value="{{ sel_term }}">
+
+    <div class="col-md-4">
+      <label class="form-label">Next Term (text)</label>
+      <input name="next_term" class="form-control"
+             placeholder="e.g. Term 2"
+             value="{{ (existing.next_term if existing else '') or '' }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Begins on (date)</label>
+      <input name="next_term_date" type="date" class="form-control"
+             value="{{ (existing.next_term_date if existing else '') or '' }}">
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button class="btn btn-success w-100" type="submit">Save</button>
+    </div>
+  </form>
+
+  {% if existing and (existing.next_term or existing.next_term_date) %}
+  <div class="alert alert-light border mt-3 mb-0">
+    <div class="fw-semibold">Current display:</div>
+    <div>
+      Term <strong>{{ existing.next_term or '—' }}</strong>
+      {% if existing.next_term_date %} begins on <strong>{{ existing.next_term_date }}</strong>{% endif %}
+    </div>
+    <small class="text-muted">This appears on the report card footer for {{ sel_term }} {{ sel_year }}.</small>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

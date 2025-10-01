@@ -1,0 +1,161 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Toolbar -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-primary m-0">Register Student</h4>
+    <div class="btn-group">
+    <a href="{{ url_for('student_statement') }}" class="btn btn-outline-primary">Statement</a>
+	 <a href="{{ url_for('parents_directory') }}" class="btn btn-success">Parents' Details</a>
+	 <a href="{{ url_for('students_import') }}" class="btn btn-outline-primary">Import Students</a>
+      <a href="{{ url_for('students') }}" class="btn btn-primary">View Students</a>
+      <a href="{{ url_for('register_student') }}" class="btn btn-outline-primary">New Registration</a>	  
+      <a href="{{ url_for('start_payment') }}" class="btn btn-primary">Make Student Payment</a> 
+	  <a href="{{ url_for('transport_hub') }}" class="btn btn-outline-primary">Transport Subs</a>
+	  
+	  <a href="{{ url_for('dashboard') }}" class="btn btn-success">← Back </a>  
+    </div>
+  </div>
+  
+  <!-- Active Academic Session -->
+  <div class="alert alert-secondary py-2 mb-3">
+    <strong>Joining Session:</strong>
+    {{ active_term }} {{ active_year }} &nbsp; • &nbsp;
+    <strong>Date Joined:</strong> {{ date_joined }}
+    <span class="text-muted">(auto-set from active academic year)</span>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Registration Form -->
+  <form method="post" class="border rounded p-3 shadow-sm bg-white">
+    <div class="row g-3">
+
+      <!-- Names -->
+      <div class="col-md-4">
+        <label class="form-label">First Name <span class="text-danger">*</span></label>
+        <input name="first_name" class="form-control" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Middle Name</label>
+        <input name="middle_name" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+        <input name="last_name" class="form-control" required>
+      </div>
+
+      <!-- Core -->
+      <div class="col-md-3">
+        <label class="form-label">Sex <span class="text-danger">*</span></label>
+        <select name="sex" class="form-select" required>
+          <option value="">-- Choose --</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Section (Day/Boarding) <span class="text-danger">*</span></label>
+        <select name="section" class="form-select" required>
+          <option value="">-- Choose --</option>
+          <option value="Day">Day</option>
+          <option value="Boarding">Boarding</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Class <span class="text-danger">*</span></label>
+        <select name="class_name" class="form-select" required>
+          <option value="">-- Choose --</option>
+          <option value="Baby">Baby</option>
+          <option value="Middle">Middle</option>
+          <option value="Top">Top</option>
+          <option value="P1">P1</option>
+          <option value="P2">P2</option>
+          <option value="P3">P3</option>
+          <option value="P4">P4</option>
+          <option value="P5">P5</option>
+          <option value="P6">P6</option>
+          <option value="P7">P7</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Stream <span class="text-danger">*</span></label>
+        <select name="stream" class="form-select" required>
+          <option value="">-- Choose --</option>
+          {% for s in streams %}
+            <option value="{{ s }}">{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- House -->
+      <div class="col-md-3">
+        <label class="form-label">House</label>
+        <select name="house" class="form-select">
+          <option value="">-- Optional --</option>
+          {% for h in houses %}
+            <option value="{{ h }}">{{ h }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Parents -->
+      <div class="col-md-3">
+        <label class="form-label">Parent 1 Name</label>
+        <input name="parent1_name" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Parent 1 Phone</label>
+        <input name="parent1_contact" class="form-control" placeholder="+2567...">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Parent 2 Name</label>
+        <input name="parent2_name" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Parent 2 Phone</label>
+        <input name="parent2_contact" class="form-control" placeholder="+2567...">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Parent Email</label>
+        <input type="email" name="parent_email" class="form-control" placeholder="name@example.com">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label">Residence</label>
+        <input name="residence" class="form-control" placeholder="Village / Parish / District">
+      </div>
+
+      <!-- Codes (auto if empty) -->
+      <div class="col-md-4">
+        <label class="form-label">Student Number (auto if empty)</label>
+        <input name="student_number" class="form-control" placeholder="e.g., STD-2025-0001">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Fees Code / Payment No. (auto if empty)</label>
+        <input name="fees_code" class="form-control" placeholder="e.g., FC-9A1B2C">
+      </div>
+
+    </div>
+
+    <div class="text-end mt-3">
+      <button class="btn btn-primary">Register Student</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

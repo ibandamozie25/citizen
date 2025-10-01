@@ -1,0 +1,36 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3">Edit Report – {{ student.name }} ({{ student.number }})</h4>
+
+  <form method="post" class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Teacher’s Comment</label>
+      <textarea name="teacher_comment" class="form-control" rows="5">{{ teacher_comment or '' }}</textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Head Teacher’s Comment</label>
+      <textarea name="head_comment" class="form-control" rows="5">{{ head_comment or '' }}</textarea>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Next Term Title</label>
+      <input type="text" name="next_term" class="form-control" value="{{ next_term or 'Next Term' }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Next Term Begins</label>
+      <input type="date" name="next_term_date" class="form-control" value="{{ next_term_date or '' }}">
+    </div>
+
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary">Save</button>
+      <a class="btn btn-outline-secondary"
+         href="{{ url_for('report_card_list', term=term, year=year, class_id=request.args.get('class_id')) }}">Back</a>
+      <a class="btn btn-outline-primary"
+         target="_blank"
+         href="{{ url_for('report_card', student_id=student.id, term=term, year=year) }}">Preview Report</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

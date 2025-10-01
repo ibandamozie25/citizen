@@ -1,0 +1,24 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="text-primary">Import Cumulative Subject Scores</h4>
+
+  <p>Student: <strong>{{ student.first_name }} {{ student.last_name }}</strong></p>
+
+  <form method="POST" enctype="multipart/form-data" class="border p-4 rounded shadow">
+    <div class="mb-3">
+      <label class="form-label">Excel File (.xlsx)</label>
+      <input type="file" name="score_file" class="form-control" accept=".xlsx" required>
+    </div>
+    <button type="submit" class="btn btn-success">Upload & Import</button>
+    <a href="{{ url_for('download_template') }}" class="btn btn-link">Download Template</a>
+  </form>
+
+  {% if success %}
+    <div class="alert alert-success mt-3">{{ success }}</div>
+  {% elif error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+  {% endif %}
+</div>
+{% endblock %}

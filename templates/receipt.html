@@ -1,0 +1,23 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div style="width: 80%; margin: auto; text-align: center; padding: 20px; border: 1px solid #000;">
+  <img src="{{ url_for('static', filename='logo.png') }}" width="80"><br>
+  <h2>Moses Secondary School</h2>
+  <p>P.O. Box 123, Kampala | Tel: +256 700 000000</p>
+  <hr>
+
+  <h3>Receipt</h3>
+  <p><strong>Receipt No:</strong> {{ payment['id'] }}</p>
+  <p><strong>Student:</strong> {{ payment['first_name'] }} {{ payment['middle_name'] }} {{ payment['last_name'] }}</p>
+  <p><strong>Student No:</strong> {{ payment['student_number'] }}</p>
+  <p><strong>Term:</strong> {{ payment['term'] }} | <strong>Year:</strong> {{ payment['year'] }}</p>
+  <p><strong>Payment Type:</strong> {{ payment['payment_type'] | replace('_', ' ') }}</p>
+  <p><strong>Expected:</strong> UGX {{ "{:,.0f}".format(payment['expected_amount']) }}</p>
+  <p><strong>Paid:</strong> UGX {{ "{:,.0f}".format(payment['amount_paid']) }}</p>
+  <p><strong>Date:</strong> {{ payment['date_paid'] }}</p>
+
+  <hr>
+  <button onclick="window.print()">Print Receipt</button>
+</div>
+{% endblock %}

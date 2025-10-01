@@ -1,0 +1,113 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-4">Income Report ({{ filters.term or 'All Terms' }})</h3>
+
+  <form method="post" class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label>From Date</label>
+      <input type="date" name="from_date" value="{{ filters.from_date }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label>To Date</label>
+      <input type="date" name="to_date" value="{{ filters.to_date }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label>Term</label>
+      <input type="text" name="term" value="{{ filters.term }}" class="form-control" placeholder="e.g. Term 1">
+    </div>
+    <div class="col-md-3 align-self-end">
+      <button class="btn btn-primary">Generate Report</button>
+      <a href="{{ url_for('export_income_report', from_date=filters.from_date, to_date=filters.to_date, term=filters.term) }}" class="btn btn-success">
+        Export to CSV
+      </a>
+    </div>
+  </form>
+
+  <div class="mb-4">
+    <strong>Fees:</strong> UGX {{ '{:,.0f}'.format(totals.fees_total) }} |
+    <strong>Requirements:</strong> UGX {{ '{:,.0f}'.format(totals.requirements_total) }} |
+    <strong>Other Income:</strong> UGX {{ '{:,.0f}'.format(totals.other_income_total) }} |
+    <strong>Total:</strong> UGX {{ '{:,.0f}'.format(totals.overall) }}
+  </div>
+
+  <h5>Fees Payments</h5>
+  <table class="table table-sm table-bordered mb-4">
+    <thead>
+      <tr>
+        <th>Student Number</th>
+        <th>Full Name</th>
+        <th>Amount</th>
+        <th>Date Paid</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in fees %}
+      <tr>
+        <td>{{ row.student_number }}</td>
+        <td>{{ row.first_name }} {{ row.last_name }}</td>
+        <td>UGX {{ '{:,.0f}'.format(row.amount_paid) }}</td>
+        <td>{{ row.date_paid }}</td>
+      </tr>
+      {% endfor %}
+      {% if fees|length == 0 %}
+      <tr><td colspan="4" class="text-center">No data</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <h5>Requirement Payments</h5>
+  <table class="table table-sm table-bordered mb-4">
+    <thead>
+      <tr>
+        <th>Student Number</th>
+        <th>Full Name</th>
+        <th>Item</th>
+        <th>Amount</th>
+        <th>Date Paid</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in requirements %}
+      <tr>
+        <td>{{ row.student_number }}</td>
+        <td>{{ row.first_name }} {{ row.last_name }}</td>
+        <td>{{ row.payment_type }}</td>
+        <td>UGX {{ '{:,.0f}'.format(row.amount_paid) }}</td>
+        <td>{{ row.date_paid }}</td>
+      </tr>
+      {% endfor %}
+      {% if requirements|length == 0 %}
+      <tr><td colspan="5" class="text-center">No data</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <h5>Other Income</h5>
+  <table class="table table-sm table-bordered">
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Amount</th>
+        <th>Recorded By</th>
+        <th>Date Received</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in other_income %}
+      <tr>
+        <td>{{ row.source }}</td>
+        <td>UGX {{ '{:,.0f}'.format(row.amount) }}</td>
+        <td>{{ row.recorded_by }}</td>
+        <td>{{ row.date_received }}</td>
+      </tr>
+      {% endfor %}
+      {% if other_income|length == 0 %}
+      <tr><td colspan="4" class="text-center">No data</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

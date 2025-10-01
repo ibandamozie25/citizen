@@ -1,0 +1,74 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3">View Reports</h4>
+
+  <!-- Filters -->
+  <form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Term</label>
+      <select name="term" class="form-select">
+        {% for t in ['Term 1','Term 2','Term 3'] %}
+        <option value="{{ t }}" {{ 'selected' if term==t else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Year</label>
+      <input type="number" class="form-control" name="year" value="{{ year }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Class</label>
+      <select name="class_id" class="form-select">
+        <option value="">-- Select Class --</option>
+        {% for c in classes %}
+        <option value="{{ c.id }}" {{ 'selected' if class_id and class_id|int==c.id else '' }}>
+          {{ c.class_name }} {{ c.stream }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+      <button class="btn btn-primary w-100">Load</button>
+      <a class="btn btn-outline-secondary w-100" href="{{ url_for('process_reports', term=term, year=year, class_id=class_id) }}">Process Reports</a>
+    </div>
+  </form>
+
+  <!-- List -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Student</th>
+          <th>Number</th>
+          <th class="text-center">Average</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody> 
+        {% for s in students %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ s.last_name }}, {{ s.first_name }} {{ s.middle_name or '' }}</td>
+          <td>{{ s.student_number }}</td>
+          <td class="text-center">{{ "%.2f"|format(s.avg or 0) }}</td>
+          <td class="text-center">
+            <a class="btn btn-sm btn-outline-primary"
+               href="{{ url_for('report_card', student_id=s.id, term=term, year=year) }}"
+               target="_blank">View / Print</a>
+            <a class="btn btn-sm btn-outline-secondary"
+               href="{{ url_for('edit_report', student_id=s.id, term=term, year=year, class_id=class_id) }}">
+               Edit Comments
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">Select class and click Load.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

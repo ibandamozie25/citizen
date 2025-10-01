@@ -1,0 +1,186 @@
+
+{% extends "base.html" %}
+{% block content %}
+<style>
+  @media print {
+    body * { visibility: hidden !important; }
+    .report-print, .report-print * { visibility: visible !important; }
+    .report-print { position: absolute; left: 0; top: 0; width: 100%; }
+    nav, .no-print { display: none !important; }
+  }
+  /* compact print mode */
+  body.compact-print { font-size: 11px; }
+  body.compact-print .table th,
+  body.compact-print .table td { font-size: 10px !important; padding: .2rem .35rem !important; }
+
+  .table thead th { white-space: nowrap; }
+  .badge-div { min-width: 64px; display: inline-block; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .counts-badges .badge { min-width: 48px; }
+  
+  th.subject-col, td.subject-col {
+  padding-left: 12px;
+  padding-right: 12px;
+  min-width: 70px; /* adjust as needed */
+  text-align: center;}
+  
+  th.student-col, td.student-col {
+  padding-left: 16px;
+  padding-right: 16px;
+  min-width: 180px; /* adjust as needed */
+  text-align: center;}
+</style>
+
+<div class="container mt-3 report-print">
+  <!-- Top controls -->
+  <div class="d-flex justify-content-between align-items-center no-print mb-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('dashboard') }}">&larr; Back</a>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary btn-sm" onclick="printNormal()">
+        <i class="bi bi-printer"></i> Print
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="printCompact()">
+        <i class="bi bi-printer"></i> Compact Print
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <h5 class="mb-0">Class Performance Summary</h5>
+    <small>Session: {{ term }} {{ year }}</small>
+    <div class="text-muted small no-print mt-1">
+      Aggregate &amp; Division are computed from the four core subjects (ENG, MATH, SCI, SST).
+      Missing any core ⇒ <strong>NG</strong> (Not Graded).
+    </div>
+  </div>
+
+  <!-- Filters (dropdowns) -->
+  <form class="row g-2 align-items-end no-print mb-3" method="get" action="{{ url_for('performance_summary') }}">
+    <div class="col-sm-4 col-md-3">
+      <label class="form-label mb-1">Class</label>
+      <select name="class_name" class="form-select">
+        <option value="">All classes</option>
+        {% for c in class_options %}
+          <option value="{{ c }}" {% if class_filter==c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-4 col-md-3">
+      <label class="form-label mb-1">Stream</label>
+      <select name="stream" class="form-select">
+        <option value="">All streams</option>
+        {% for s in stream_options %}
+          <option value="{{ s }}" {% if stream_filter==s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-4 col-md-3">
+      <label class="form-label mb-1 d-block">&nbsp;</label>
+      <button class="btn btn-primary">Filter</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('performance_summary') }}">Reset</a>
+    </div>
+  </form>
+
+  {% if not classes %}
+    <div class="alert alert-info">No marks found for {{ term }} {{ year }} (with current filters).</div>
+  {% endif %}
+
+  {% for key, students in classes|dictsort %}
+    {% set cls = key[0] %}
+    {% set strm = key[1] %}
+    {% set stats = class_stats[key] %}
+    {% set dc = stats.div_counts or {} %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <strong>{{ cls }} {{ strm }}</strong>
+          <span class="text-muted ms-2">({{ stats.size }} students)</span>
+        </div>
+        <div class="small d-flex flex-wrap align-items-center gap-3">
+          <span>Mean Avg: <strong>{{ "%.1f"|format(stats.mean) }}</strong></span>
+          <span>Top Avg: <strong>{{ "%.1f"|format(stats.top_avg) }}</strong></span>
+          <!-- Division counts -->
+          <span class="counts-badges d-inline-flex align-items-center gap-1">
+            <span class="badge bg-success">D1: {{ dc.get('Div 1', 0) }}</span>
+            <span class="badge bg-primary">D2: {{ dc.get('Div 2', 0) }}</span>
+            <span class="badge bg-warning text-dark">D3: {{ dc.get('Div 3', 0) }}</span>
+            <span class="badge bg-secondary">D4: {{ dc.get('Div 4', 0) }}</span>
+            <span class="badge bg-danger">U: {{ dc.get('U', 0) }}</span>
+            <span class="badge bg-dark">NG: {{ dc.get('NG', 0) }}</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Student</th>
+                <th class="subject-col">ENG</th>
+                <th class="subject-col">MATH</th>
+                <th class="subject-col">SCI</th>
+                <th class="subject-col">SST</th>
+                <th class="text-end">Subjects</th>
+                <th class="text-end">Total</th>
+                <th class="text-end">Average</th>
+                <th class="text-end">Aggregate</th>
+                <th class="text-center">Division</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students %}
+                {% set idx = loop.index %}
+                {% set div = s.division %}
+                {% set badge = 'secondary' %}
+                {% if div == 'Div 1' %}{% set badge = 'success' %}
+                {% elif div == 'Div 2' %}{% set badge = 'primary' %}
+                {% elif div == 'Div 3' %}{% set badge = 'warning' %}
+                {% elif div == 'Div 4' %}{% set badge = 'secondary' %}
+                {% elif div == 'U' %}{% set badge = 'danger' %}
+                {% elif div == 'NG' %}{% set badge = 'dark' %}
+                {% endif %}
+                {% set core = s.by_subject or {} %}
+                {% set e = core.get('eng') %}
+                {% set m = core.get('math') %}
+                {% set sc = core.get('sci') %}
+                {% set ss = core.get('sst') %}
+                <tr>
+                  <td>{{ idx }}</td>
+                  <td>{{ s.name }}</td>
+                  <td class="text-center mono">{% if e %}{{ e.grade }} ({{ e.points }}){% else %}&mdash;{% endif %}</td>
+                  <td class="text-center mono">{% if m %}{{ m.grade }} ({{ m.points }}){% else %}&mdash;{% endif %}</td>
+                  <td class="text-center mono">{% if sc %}{{ sc.grade }} ({{ sc.points }}){% else %}&mdash;{% endif %}</td>
+                  <td class="text-center mono">{% if ss %}{{ ss.grade }} ({{ ss.points }}){% else %}&mdash;{% endif %}</td>
+                  <td class="text-end mono">{{ s.scores|length }}</td>
+                  <td class="text-end mono">{{ "%.1f"|format(s.total) }}</td>
+                  <td class="text-end mono">{{ "%.1f"|format(s.average) }}</td>
+                  <td class="text-end mono">
+                    {% if s.aggregate is not none %}{{ s.aggregate }}{% else %}NG{% endif %}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-{{ badge }} badge-div">{{ div }}</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+  function printNormal() {
+    document.body.classList.remove('compact-print');
+    window.print();
+  }
+  function printCompact() {
+    document.body.classList.add('compact-print');
+    window.print();
+    setTimeout(() => document.body.classList.remove('compact-print'), 400);
+  }
+</script>
+{% endblock %}

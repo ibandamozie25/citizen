@@ -1,0 +1,71 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">Promotions History</h4>
+    <a href="{{ url_for('promotions_hub') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Hub</a>
+  </div>
+
+  <form method="get" class="row g-2 mt-3">
+    <div class="col-md-3"><input name="q" value="{{ q_student }}" class="form-control" placeholder="Student No. or Name"></div>
+    <div class="col-md-2">
+      <select name="from_class" class="form-select">
+        <option value="">From Class</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if q_from==c else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="to_class" class="form-select">
+        <option value="">To Class</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if q_to==c else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3"><input name="batch_id" value="{{ q_batch }}" class="form-control" placeholder="Batch ID"></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100">Filter</button></div>
+  </form>
+
+  <div class="table-responsive mt-2">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Student No.</th>
+          <th>Name</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Actor</th>
+          <th>Batch</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.created_at }}</td>
+          <td>{{ r.student_number }}</td>
+          <td>{{ r.full_name }}</td>
+          <td>{{ r.from_class }}</td>
+          <td>{{ r.to_class }}</td>
+          <td>{{ r.actor }}</td>
+          <td>{{ r.batch_id }}</td>
+          <td class="text-end">
+            <form method="post" action="{{ url_for('promotions_demote', student_id=r.student_id) }}" class="d-inline"
+                  onsubmit="return confirm('Revert this promotion for {{ r.full_name }}?');">
+              {# {{ csrf_token() }} #}
+              <button class="btn btn-sm btn-outline-secondary">Demote</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted">No history.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

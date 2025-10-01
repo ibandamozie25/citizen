@@ -1,0 +1,30 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="text-primary text-center mb-4">Edit Grade</h4>
+  <form method="POST" class="row g-3 border p-3 shadow rounded">
+    <div class="col-md-3">
+      <label>Grade</label>
+      <input type="text" name="grade" value="{{ grade.grade }}" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Lower Limit</label>
+      <input type="number" name="lower_limit" value="{{ grade.lower_limit }}" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Upper Limit</label>
+      <input type="number" name="upper_limit" value="{{ grade.upper_limit }}" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Comment</label>
+      <input type="text" name="comment" value="{{ grade.comment }}" class="form-control">
+    </div>
+    <div class="col-12 text-end">
+      <button class="btn btn-primary" type="submit">Update</button>
+      <a href="{{ url_for('grading_scale') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+ 

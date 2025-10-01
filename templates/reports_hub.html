@@ -1,0 +1,181 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3 text-primary">Report Processing & Printing</h4>
+
+  <!-- Filters -->
+  <form class="row g-3 mb-3" method="get" action="{{ url_for('reports_hub') }}">
+    <div class="col-md-3">
+      <label class="form-label">Class</label>
+      <select name="class_name" class="form-select">
+        {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if c==sel_class else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Term</label>
+      <select name="term" class="form-select">
+        {% for t in terms %}
+          <option value="{{ t }}" {{ 'selected' if t==sel_term else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Year</label>
+      <select name="year" class="form-select">
+        {% for y in years %}
+          <option value="{{ y }}" {{ 'selected' if y==sel_year else '' }}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button class="btn btn-outline-primary w-100" type="submit">Load</button>
+    </div>
+  </form>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-8">
+      <!-- Process snapshot -->
+      <form method="post" action="{{ url_for('reports_hub') }}" class="mb-3">
+        <input type="hidden" name="class_name" value="{{ sel_class }}">
+        <input type="hidden" name="term" value="{{ sel_term }}">
+        <input type="hidden" name="year" value="{{ sel_year }}">
+        <input type="hidden" name="action" value="process">
+        <button class="btn btn-primary" type="submit">
+          Process (Rebuild Snapshot for {{ sel_class }} - {{ sel_term }} {{ sel_year }})
+        </button>
+      </form>
+
+      <!-- Batch print -->
+      <form method="post" action="{{ url_for('report_card_print_batch') }}">
+        <input type="hidden" name="class_name" value="{{ sel_class }}">
+        <input type="hidden" name="term" value="{{ sel_term }}">
+        <input type="hidden" name="year" value="{{ sel_year }}">
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <input type="checkbox" id="select-all">
+            <label for="select-all">Select all</label>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="form-check m-0">
+              <input class="form-check-input" type="checkbox" id="overwrite" name="overwrite" value="1">
+              <label class="form-check-label" for="overwrite">
+                Overwrite remarks from rules (ignore manual edits)
+              </label>
+            </div>
+            <div class="form-check m-0">
+              <input class="form-check-input" type="checkbox" id="include_midterms" name="include_midterms" value="1" checked>
+              <label class="form-check-label" for="include_midterms">Include Midterm Table</label>
+            </div>
+            <button type="submit" class="btn btn-success">Print Selected</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead class="table-primary">
+              <tr>
+                <th style="width:40px;"></th>
+                <th>Student</th>
+                <th>Class</th>
+                <th>Term</th>
+                <th>Year</th>
+                <th style="width:140px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students_ready %}
+              <tr>
+                <td>
+                  <input type="checkbox" name="selected_ids" value="{{ s.id }}" class="row-check">
+                </td>
+                <td>{{ s.first_name }} {{ s.last_name }} <span class="text-muted">({{ s.student_number }})</span></td>
+                <td>{{ s.class_name }}</td>
+                <td>{{ s.term }}</td>
+                <td>{{ s.year }}</td>
+                <td>
+                  <a class="btn btn-outline-primary btn-sm view-print"
+                     data-student="{{ s.id }}"
+                     data-term="{{ s.term }}"
+                     data-year="{{ s.year }}"
+                     href="#"
+                     target="_blank">View / Print</a>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="text-center">No processed reports for these filters yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </form>
+    </div>
+
+    <!-- Next term setup (NEW) -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Next-term setup ({{ sel_term }} {{ sel_year }})</div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('reports_hub') }}" class="row g-2">
+            <input type="hidden" name="action" value="save_term_dates">
+            <input type="hidden" name="class_name" value="{{ sel_class }}">
+            <input type="hidden" name="term" value="{{ sel_term }}">
+            <input type="hidden" name="year" value="{{ sel_year }}">
+
+            <div class="col-12">
+              <label class="form-label">Next Term (text)</label>
+              <input name="next_term" class="form-control"
+                     value="{{ (existing_term.next_term if existing_term else '') or '' }}"
+                     placeholder="e.g. Term 2">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Begins on (date)</label>
+              <input name="next_term_date" type="date" class="form-control"
+                     value="{{ (existing_term.next_term_date if existing_term else '') or '' }}">
+            </div>
+            <div class="col-12 d-grid">
+              <button class="btn btn-outline-success" type="submit">Save</button>
+            </div>
+            {% if existing_term and (existing_term.next_term or existing_term.next_term_date) %}
+              <div class="col-12 small text-muted">
+                Current: <strong>{{ existing_term.next_term or '—' }}</strong>
+                {% if existing_term.next_term_date %} begins on <strong>{{ existing_term.next_term_date }}</strong>{% endif %}
+              </div>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Select-all for batch printing
+  (function () {
+    const selAll = document.getElementById('select-all');
+    if (!selAll) return;
+    selAll.addEventListener('change', () => {
+      document.querySelectorAll('.row-check').forEach(cb => cb.checked = selAll.checked);
+    });
+  })();
+
+  // Append ?include_mid=1 to single view links
+  (function () {
+    document.querySelectorAll('.view-print').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const student = this.dataset.student;
+        const term = encodeURIComponent(this.dataset.term);
+        const year = encodeURIComponent(this.dataset.year);
+        const cb = document.getElementById('include_midterms');
+        const includeMid = (cb && cb.checked) ? 1 : 0;
+        const url = `/report_card/${student}/${term}/${year}?include_mid=${includeMid}`;
+        window.open(url, '_blank');
+      });
+    });
+  })();
+</script>
+{% endblock %}

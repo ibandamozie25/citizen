@@ -1,0 +1,62 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h3>Income Statement</h3>
+
+    <form method="post" class="row g-3 mb-3">
+      <div class="col-md-4">
+        <label>Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label>End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+      </div>
+      <div class="col-md-4 align-self-end">
+        <button class="btn btn-primary">Generate Statement</button>
+        {% if start_date and end_date %}
+          
+        {% endif %}
+      </div>
+    </form>
+     <a href="{{ url_for('export_income_statement', start_date=start_date, end_date=end_date) }}" class="btn btn-success">
+            Export to CSV
+          </a>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Amount (UGX)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>School Fees</td>
+          <td>{{ '{:,.0f}'.format(fee_income) }}</td>
+        </tr>
+        <tr>
+          <td>Requirements</td>
+          <td>{{ '{:,.0f}'.format(req_income) }}</td>
+        </tr>
+        <tr>
+          <td>Other Income</td>
+          <td>{{ '{:,.0f}'.format(other_income) }}</td>
+        </tr>
+        <tr class="table-info">
+          <td><strong>Total Income</strong></td>
+          <td><strong>{{ '{:,.0f}'.format(total_income) }}</strong></td>
+        </tr>
+        <tr>
+          <td>Expenses</td>
+          <td>{{ '{:,.0f}'.format(expenses) }}</td>
+        </tr>
+        <tr class="table-success">
+          <td><strong>Net Income</strong></td>
+          <td><strong>{{ '{:,.0f}'.format(net_income) }}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

@@ -1,0 +1,183 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="mb-0">Audit Trail</h4>
+    <span class="text-muted">Total records: {{ total }}</span>
+  </div>
+
+  <!-- Filters -->
+  <form class="row g-2 mb-3" method="get">
+    <div class="col-6 col-md-2">
+      <input class="form-control" name="user_id" type="number" placeholder="User ID"
+             value="{{ q.user_id or '' }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <input class="form-control" name="role" placeholder="Role"
+             value="{{ q.role or '' }}">
+    </div>
+    <div class="col-12 col-md-3">
+      <input class="form-control" name="action" placeholder="Action contains…"
+             value="{{ q.action or '' }}">
+    </div>
+    <div class="col-12 col-md-3">
+      <input class="form-control" name="route" placeholder="Route contains…"
+             value="{{ q.route or '' }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <select class="form-select" name="outcome">
+        <option value="">Any outcome</option>
+        {% for o in ['success','failure','warning'] %}
+          <option value="{{ o }}" {% if q.outcome==o %}selected{% endif %}>{{ o|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <select class="form-select" name="per">
+        {% for n in [25,50,100,200] %}
+          <option value="{{ n }}" {% if per==n %}selected{% endif %}>{{ n }} / page</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-auto">
+      <button class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('audit_trail') }}">Reset</a>
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="min-width: 150px;">Timestamp</th>
+          <th>User</th>
+          <th>Role</th>
+          <th>Action</th>
+          <th>Outcome</th>
+          <th>Severity</th>
+          <th>Route</th>
+          <th>Method</th>
+          <th>IP</th>
+          <th>Target</th>
+          <th style="min-width: 220px;">Details</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if audit_logs %}
+          {% for r in audit_logs %}
+          <tr>
+            <td class="text-nowrap">{{ r.timestamp }}</td>
+            <td>
+              {% if r.user_name %}{{ r.user_name }}{% else %}—{% endif %}
+              <div class="text-muted small">ID: {{ r.user_id or '—' }}</div>
+            </td>
+            <td>{{ r.role or '—' }}</td>
+            <td><code class="small">{{ r.action }}</code></td>
+            <td>
+              {% set badge = 'secondary' %}
+              {% if r.outcome == 'success' %}{% set badge = 'success' %}
+              {% elif r.outcome == 'failure' %}{% set badge = 'danger' %}
+              {% elif r.outcome == 'warning' %}{% set badge = 'warning' %}{% endif %}
+              <span class="badge bg-{{ badge }}">{{ r.outcome or '—' }}</span>
+            </td>
+            <td>
+              {% set sbadge = 'secondary' %}
+              {% if r.severity == 'critical' %}{% set sbadge = 'danger' %}
+              {% elif r.severity == 'warning' %}{% set sbadge = 'warning' %}
+              {% elif r.severity == 'info' %}{% set sbadge = 'info' %}{% endif %}
+              <span class="badge bg-{{ sbadge }}">{{ r.severity or 'info' }}</span>
+            </td>
+            <td class="text-nowrap">{{ r.route or '—' }}</td>
+            <td>{{ r.method or '—' }}</td>
+            <td class="text-nowrap">{{ r.ip_address or '—' }}</td>
+            <td class="text-nowrap">
+              {{ r.target_table or '—' }}
+              {% if r.target_id %}#{{ r.target_id }}{% endif %}
+            </td>
+            <td>
+              {% if r.details_json %}
+                <div class="text-truncate" style="max-width: 260px;">
+                  <code class="small">{{ r.details_json }}</code>
+                </div>
+                <button type="button"
+                        class="btn btn-link btn-sm p-0 view-details"
+                        data-bs-toggle="modal"
+                        data-bs-target="#auditDetailsModal"
+                        data-details='{{ r.details_json|tojson|e }}'>
+                  view
+                </button>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>{{ r.http_status or '—' }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="12" class="text-center text-muted py-4">No audit records found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pages > 1 %}
+  <nav aria-label="Audit pagination">
+    <ul class="pagination justify-content-center my-3">
+      {% set prev = page - 1 %}
+      <li class="page-item {{ 'disabled' if page <= 1 }}">
+        <a class="page-link"
+           href="{{ url_for('audit_trail') }}?{{ querystring }}&page={{ prev }}&per={{ per }}">«</a>
+      </li>
+      {% set start = 1 if page-2 < 1 else page-2 %}
+      {% set end = pages if page+2 > pages else page+2 %}
+      {% for p in range(start, end+1) %}
+        <li class="page-item {{ 'active' if p == page }}">
+          <a class="page-link"
+             href="{{ url_for('audit_trail') }}?{{ querystring }}&page={{ p }}&per={{ per }}">{{ p }}</a>
+        </li>
+      {% endfor %}
+      {% set next = page + 1 %}
+      <li class="page-item {{ 'disabled' if page >= pages }}">
+        <a class="page-link"
+           href="{{ url_for('audit_trail') }}?{{ querystring }}&page={{ next }}&per={{ per }}">»</a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="auditDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">Audit Details</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <pre class="mb-0" id="auditDetailsPre" style="white-space: pre-wrap;"></pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.view-details');
+    if (!btn) return;
+    let raw = btn.getAttribute('data-details') || '';
+    let text = raw;
+    try {
+      const parsed = JSON.parse(raw);
+      text = JSON.stringify(parsed, null, 2);
+    } catch (_) {}
+    document.getElementById('auditDetailsPre').textContent = text;
+  });
+</script>
+{% endblock %}

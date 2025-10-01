@@ -1,0 +1,46 @@
+
+{% extends "base.html" %}
+{% import 'partials/students_macros.html' as sm %}
+{% block content %}
+<div class="container mt-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">Archive Hub</h4>
+    <a href="{{ url_for('promotions_hub') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Promotions</a>
+  </div>
+
+  <form method="get" class="row g-2 mt-3">
+    <div class="col-md-3">
+      <label class="form-label">Student Number</label>
+      <input name="student_number" value="{{ q_sn or '' }}" class="form-control" placeholder="e.g. STD-2025-305">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Last Name</label>
+      <input name="last_name" value="{{ q_lname or '' }}" class="form-control" placeholder="e.g. Okello">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Class</label>
+      <select name="class" class="form-select">
+        <option value="">All</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if q_class==c else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Year Completed</label>
+      <select name="year" class="form-select">
+        <option value="">All</option>
+        {% for y in years %}
+          <option value="{{ y }}" {{ 'selected' if (q_year|string)==(y|string) else '' }}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 mt-2">
+      <button class="btn btn-primary">Search</button>
+      <a href="{{ url_for('archive_hub') }}" class="btn btn-outline-secondary">Clear</a>
+    </div>
+  </form>
+
+  {{ sm.render_archived_students_table(rows, show_unarchive=True) }}
+</div>
+{% endblock %}

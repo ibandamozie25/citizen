@@ -1,0 +1,177 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-primary mb-3">System Users</h3>
+
+  <!-- Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Create -->
+  <form method="post" class="row g-2 mb-4 border rounded p-3 bg-light shadow-sm">
+    <div class="col-md-4">
+      <label class="form-label">Link Employee (optional)</label>
+      <select name="employee_id" id="employee_id" class="form-select">
+        <option value="">-- none --</option>
+        {% for e in employees %}
+          <option value="{{ e.id }}"
+            {% if pre_emp_id and pre_emp_id|int == e.id %}selected{% endif %}>
+            {{ e.last_name }}, {{ e.first_name }} {{ e.middle_name }} — {{ e.designation or 'Staff' }}
+            {% if e.status != 'active' %}(archived){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+      <div class="form-text" id="emp_name_hint"></div>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Username *</label>
+      <input type="text" name="username" id="username" class="form-control" required>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Password *</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+
+    <!-- Role dropdown fixed -->
+    <div class="col-md-2">
+      <label class="form-label">Role *</label>
+      {% set ROLE_CHOICES = {
+        'admin':'Admin',
+        'headteacher':'Headteacher',
+        'deputyheadteacher':'Deputy Headteacher',
+        'dos':'DOS',
+        'teacher':'Teacher',
+        'bursar':'Bursar',
+        'director':'Director',
+        'clerk':'Clerk'
+      } %}
+      <select name="role" class="form-select" required>
+        {% for value,label in ROLE_CHOICES.items() %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Status</label>
+      <select name="status" class="form-select">
+        <option value="active" selected>Active</option>
+        <option value="archived">Archived</option>
+      </select>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-primary w-100" type="submit">Add User</button>
+    </div>
+  </form>
+
+  <!-- Search -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by username or role">
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-primary w-100">Search</button>
+    </div>
+    <div class="col-md-2">
+      <a href="{{ url_for('manage_users') }}" class="btn btn-primary w-100">Clear</a>
+    </div>
+    <div class="col-md-2">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-primary w-100"> ← Back </a>
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Linked Employee</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th class="text-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ u.username }}</td>
+          <td>{{ ROLE_CHOICES.get(u.role, u.role) }}</td>
+          <td>
+            {% if u.employee_id %}
+              {{ u.last_name }}, {{ u.first_name }} {{ u.middle_name or '' }}
+              <small class="text-muted">({{ u.designation or 'Staff' }})</small>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {% if u.status=='active' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ u.status }}
+            </span>
+          </td>
+          <td>{{ u.created_at or '' }}</td>
+          <td class="text-nowrap">
+            <a href="{{ url_for('edit_user', user_id=u.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+            <form method="post" action="{{ url_for('toggle_user', user_id=u.id) }}" class="d-inline"
+                  onsubmit="return confirm('Toggle status for {{ u.username }}?');">
+              <button class="btn btn-sm btn-outline-secondary">Toggle</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_user', user_id=u.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete {{ u.username }}? This cannot be undone.');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// Simple auto-username suggestion when picking an employee
+(function(){
+  const sel = document.getElementById('employee_id');
+  const user = document.getElementById('username');
+  const hint = document.getElementById('emp_name_hint');
+
+  sel.addEventListener('change', function(){
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) { hint.textContent = ''; return; }
+    const raw = opt.text;
+    hint.textContent = raw;
+    const namePart = raw.split('—')[0].trim();
+    let last = "", first = "";
+    if (namePart.includes(',')){
+      const [l, rest] = namePart.split(',', 2);
+      last = (l||'').trim();
+      first = (rest||'').trim().split(' ')[0] || "";
+    }
+    const suggested = (first ? first[0].toLowerCase() : '') + (last||'').toLowerCase().replace(/\s+/g,'');
+    if (suggested) user.value = suggested;
+  });
+  if (sel.value) {
+    const event = new Event('change');
+    sel.dispatchEvent(event);
+  }
+})();
+</script>
+{% endblock %}

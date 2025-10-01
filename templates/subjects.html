@@ -1,0 +1,83 @@
+
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 style="text-align: center;">All Students</h2>
+
+<div style="text-align: center; margin-bottom: 20px;">
+  <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Search by name or ID" style="padding: 8px; width: 40%;">
+  <button onclick="window.print()">Print List</button>
+</div>
+
+<table border="1" id="studentsTable" width="95%" style="margin:auto; text-align:center;">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Student Number</th>
+      <th>Full Name</th>
+      <th>Level</th>
+      <th>Class</th>
+      <th>Stream</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in students %}
+    <tr>
+      <td>{{ s['id'] }}</td>
+      <td>{{ s['student_number'] }}</td>
+      <td>{{ s['first_name'] }} {{ s['middle_name'] }} {{ s['last_name'] }}</td>
+      <td>{{ s['level'] }}</td>
+      <td>{{ s['class'] }}</td>
+      <td>{{ s['stream'] }}</td>
+      <td>
+        <span style="color: {% if s['status'] == 'active' %}green{% elif s['status'] == 'dropped' %}red{% else %}orange{% endif %}; font-weight: bold;">
+          {{ s['status'].replace('_', ' ').title() }}
+        </span>
+      </td>
+      <td>
+        {% if s['status'] != 'completed_s4' %}
+          <a href="{{ url_for('update_student_status', student_id=s['id'], status='completed_s4') }}">S4 Done</a><br>
+        {% endif %}
+        {% if s['status'] != 'completed_s6' %}
+          <a href="{{ url_for('update_student_status', student_id=s['id'], status='completed_s6') }}">S6 Done</a><br>
+        {% endif %}
+        {% if s['status'] != 'left' %}
+          <a href="{{ url_for('update_student_status', student_id=s['id'], status='left') }}">Left</a><br>
+        {% endif %}
+        {% if s['status'] != 'dropped' %}
+          <a href="{{ url_for('update_student_status', student_id=s['id'], status='dropped') }}">Drop</a><br>
+        {% endif %}
+        {% if s['status'] != 'active' %}
+          <a href="{{ url_for('update_student_status', student_id=s['id'], status='active') }}">Restore</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function searchTable() {
+  let input = document.getElementById("searchInput").value.toUpperCase();
+  let table = document.getElementById("studentsTable");
+  let tr = table.getElementsByTagName("tr");
+
+  for (let i = 1; i < tr.length; i++) {
+    let tdId = tr[i].getElementsByTagName("td")[0];
+    let tdName = tr[i].getElementsByTagName("td")[2];
+    if (tdId || tdName) {
+      let idValue = tdId.textContent || tdId.innerText;
+      let nameValue = tdName.textContent || tdName.innerText;
+      if (idValue.toUpperCase().indexOf(input) > -1 || nameValue.toUpperCase().indexOf(input) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+</script>
+
+{% endblock %}

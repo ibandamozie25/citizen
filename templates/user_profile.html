@@ -1,0 +1,33 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h2 style="text-align:center;">My Profile</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <p style="text-align: center; color: {{ 'green' if category == 'success' else 'red' }}">{{ message }}</p>
+  {% endfor %}
+{% endwith %}
+
+<form method="POST" style="width: 450px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 8px;">
+  <label>First Name:</label>
+  <input type="text" name="first_name" value="{{ user['first_name'] }}" required><br><br>
+
+  <label>Middle Name:</label>
+  <input type="text" name="middle_name" value="{{ user['middle_name'] }}"><br><br>
+
+  <label>Last Name:</label>
+  <input type="text" name="last_name" value="{{ user['last_name'] }}" required><br><br>
+
+  <label>Email:</label>
+  <input type="email" name="email" value="{{ user['email'] }}" required><br><br>
+
+  <label>Contact:</label>
+  <input type="text" name="contact" value="{{ user['contact'] }}" required><br><br>
+
+  <label>Role:</label>
+  <input type="text" value="{{ user['role'].capitalize() }}" readonly><br><br>
+
+  <button type="submit">Save Changes</button>
+</form>
+{% endblock %}

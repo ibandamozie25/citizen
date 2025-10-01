@@ -1,0 +1,181 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .page{ width:185mm; max-width:100%; margin:0 auto 20px; background:#fff; border:1px solid #111; border-radius:8px; padding:10px 10px 6px; font-size:11.5px; line-height:1.24; }
+  .hdr{line-height:1.05;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+  .hdr .center{flex:3;text-align:center}.hdr .left,.hdr .right{flex:1}
+  .hdr .name{font-weight:800;font-size:17px}
+  .hdr .tagline{font-weight:600}.hdr .motto{font-style:italic}.hdr .meta{font-size:10.5px;color:#374151}
+  .section-title{text-align:center;font-weight:700;margin:4px 0 6px;text-decoration:underline}
+  .rowline{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:3px}
+  .rowline>div{flex:1 1 220px}
+  table.report{width:100%;border-collapse:collapse;table-layout:fixed}
+  table.report th,table.report td{border:1px solid #111;padding:2px 4px;font-size:11px;word-wrap:break-word;overflow-wrap:break-word}
+  table.report thead th{background:none}
+  .report thead th:nth-child(5), .report td:nth-child(5){ max-width:150px }
+  .report.midterm th,.report.midterm td{ font-size:10px; padding:2px 3px }
+  .small{font-size:10.5px}.muted{color:#6b7280}.legend{font-size:10.5px}.footer-note{margin-top:6px;font-size:10.5px}
+  .keep{ display:inline-block; width:100%; break-inside:avoid; page-break-inside:avoid; }
+  @media print{
+    @page{ margin:8mm }
+    body *{ visibility:hidden!important }
+    .page, .page *{ visibility:visible!important }
+    .page{ border:1px solid #000; box-shadow:none; border-radius:0; margin:0 auto!important; background:#fff; break-inside:avoid-page; page-break-inside:avoid; break-after:page; }
+    .keep{ break-inside:avoid-page; page-break-inside:avoid }
+    table.report{ border-collapse:collapse!important; break-inside:avoid-page }
+    thead{ display:table-header-group } tfoot{ display:table-footer-group }
+    tr,td,th{ break-inside:avoid-page; page-break-inside:avoid!important }
+    .no-print, header, nav, aside, footer, .navbar, .sidebar{ display:none!important }
+    html{ zoom:1 } body{ -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  }
+</style>
+
+<!-- NAV (screen only) -->
+<div class="no-print d-flex justify-content-between align-items-center mb-2">
+  <div class="btn-group">
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('reports_hub') }}">Reports</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('students') }}">Students</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('student_statement') }}">Statement</a>
+  </div>
+  <div class="btn-group">
+    {% if prev_id %}
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('report_card', student_id=prev_id, term=term, year=year) }}">&larr; Prev</a>
+    {% endif %}
+    {% if next_id %}
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('report_card', student_id=next_id, term=term, year=year) }}">Next &rarr;</a>
+    {% endif %}
+    <button class="btn btn-success btn-sm" onclick="window.print()">
+      <i class="bi bi-printer"></i> Print All
+    </button>
+  </div>
+</div>
+
+{% for rep in reports %}
+<div class="page">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="left"><img src="{{ url_for('static', filename='logo.jpg') }}" alt="School Logo" width="80"></div>
+    <div class="center">
+      <div class="name">{{ rep.school.name }}</div>
+      <div class="tagline">{{ rep.school.tagline }}</div>
+      <div class="motto">{{ rep.school.motto }}</div>
+      <div class="meta">{{ rep.school.phones }} &nbsp;&nbsp;&nbsp; {{ rep.school.pobox }}</div>
+    </div>
+    <div class="right"></div>
+  </div>
+
+  <div class="section-title">End of Term Report</div>
+
+  <!-- Identifiers -->
+  <div class="rowline small">
+    <div><strong>NAME:</strong> {{ rep.student.first_name }} {{ rep.student.middle_name or '' }} {{ rep.student.last_name }}</div>
+    <div><strong>STUDENT’S NUMBER:</strong> {{ rep.student.student_number }}</div>
+  </div>
+  <div class="rowline small">
+    <div><strong>PAYMENT NUMBER:</strong> {{ rep.payment_number or 'N/A' }}</div>
+    <div><strong>CLASS:</strong> {{ rep.student.class_name }} {{ rep.student.stream }}</div>
+    <div><strong>TERM:</strong> {{ rep.term }} &nbsp;&nbsp; <strong>YEAR:</strong> {{ rep.year }}</div>
+  </div>
+
+  <!-- Main table -->
+  <table class="report">
+    <thead>
+      <tr>
+        <th>SUBJECT</th><th>EOT</th>
+        <th>TOTAL<br><span class="muted small">(100%)</span></th>
+        <th>GRADE</th><th>COMMENT</th><th>INITIALS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rep.rows %}
+      <tr>
+        <td>{{ r.subject }}{% if r.subject_code %} <span class="muted small">({{ r.subject_code }})</span>{% endif %}</td>
+        <td>{{ r.eot or '' }}</td>
+        <td>{{ r.total_100 or '' }}</td>
+        <td>{{ r.grade or '' }}</td>
+        <td>{{ r.comment or '' }}</td>
+        <td>{{ r.initials or '' }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td><strong>TOTAL</strong></td>
+        <td>{{ rep.total_sum or '' }}</td>
+        <td>{{ rep.total_sum or '' }}</td>
+        <td>{% if rep.aggregate is not none %}{{ rep.aggregate }}{% endif %}</td>
+        <td></td><td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Summary -->
+  <div class="rowline small" style="margin-top:6px;">
+    <div><strong>Average</strong>: {{ rep.avg_overall or '' }}</div>
+    <div><strong>Aggregate:</strong> {{ rep.aggregate or '' }} &nbsp;&nbsp; <strong>Division:</strong> {{ rep.division or '' }}</div>
+    <div>
+      <strong>Class Position:</strong>
+      {% set n = rep.position %}
+      {% if n %}
+        {% set last = n % 10 %}{% set last2 = n % 100 %}
+        {{ n }}{% if last == 1 and last2 != 11 %}st{% elif last == 2 and last2 != 12 %}nd{% elif last == 3 and last2 != 13 %}rd{% else %}th{% endif %}
+      {% endif %}
+      &nbsp; <strong>Class of:</strong> {{ rep.class_size or '' }}
+    </div>
+  </div>
+
+  <!-- MID TERM EXAMS (dynamic columns) -->
+  <div class="section-title" style="margin-top:8px;">MID TERM EXAMS</div>
+  <table class="report midterm">
+    <thead>
+      <tr>
+        <th>Assessment</th>
+        {% for code in rep.midterm_subjects %}
+          <th>{{ code }}</th><th>GR</th>
+        {% endfor %}
+        <th>TOTAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if rep.midterms and rep.midterms|length %}
+        {% for m in rep.midterms %}
+          <tr>
+            <td>{{ m.assessment }}</td>
+            {% for code in rep.midterm_subjects %}
+              <td>{{ m.scores[code] if m.scores[code] is not none else '' }}</td>
+              <td>{{ m.grades[code] or '' }}</td>
+            {% endfor %}
+            <td>{{ m.total or '' }}</td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="{{ 2*rep.midterm_subjects|length + 2 }}" class="small muted">No midterm data recorded.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <!-- Remarks / Next term -->
+  <div class="small" style="margin-top:8px;">
+    <div><strong>Class Teacher’s comment:</strong> <em>{{ rep.comments.teacher_comment if rep.comments else '' }}</em></div>
+    <div><strong>Head Teacher’s Comment:</strong> <em>{{ rep.comments.head_comment if rep.comments else '' }}</em></div>
+  </div>
+  <div class="small" style="margin-top:6px;"><strong>Signature/Stamp:</strong> ……………………….</div>
+
+  {% if rep.next_term_info and (rep.next_term_info.next_term or rep.next_term_info.next_term_date) %}
+  <div class="small" style="margin-top:4px;">
+    <strong>Term {{ rep.next_term_info.next_term or '' }} begins on:</strong> {{ rep.next_term_info.next_term_date or '' }}
+  </div>
+  {% endif %}
+
+  <!-- Legend -->
+  <div class="legend" style="margin-top:8px;">
+    <strong>Marks</strong> →
+    {% for g in rep.grading %}
+      {{ g.lower_limit }}–{{ g.upper_limit }} : <strong>{{ g.grade }}</strong>{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </div>
+  <div class="footer-note"><em>Invalid without school Stamp</em></div>
+</div>
+{% endfor %}
+{% endblock %}

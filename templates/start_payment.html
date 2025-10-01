@@ -1,0 +1,323 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-primary m-0">Record Payment</h4>
+    <div class="btn-group">
+      <a class="btn btn-primary" href="{{ url_for('register_student') }}">Register Student</a>
+      <a class="btn btn-outline-primary" href="{{ url_for('students') }}">View Students</a>
+      <a class="btn btn-outline-primary" href="{{ url_for('start_payment') }}">Refresh</a>
+      <a class="btn btn-outline-primary" href="{{ url_for('transport_hub') }}">Transport Settings</a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Search / Select Student -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-6">
+      <label class="form-label">Select Student</label>
+      <select name="student_id" class="form-select" required>
+        <option value="">-- choose a student --</option>
+        {% for s in students_list %}
+          {% set full = (s.last_name ~ ' ' ~ s.first_name ~ ' ' ~ (s.m or '')) | trim %}
+          {% set label = full ~ ' — ' ~ s.class_name ~ ' ' ~ (s.stream or '') ~ ' — ' ~ s.student_number %}
+          <option value="{{ s.id }}" {% if student and student.id == s.id %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Term</label>
+      <select name="term" class="form-select">
+        {% for t in terms %}
+          <option value="{{ t }}" {{ 'selected' if t==current_term else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-flex align-items-end justify-content-end">
+      <button class="btn btn-primary">Load</button>
+    </div>
+  </form>
+
+  {% if student %}
+    <!-- Quick Transport subscribe/unsubscribe -->
+    <div class="border rounded p-2 mb-3">
+      <form class="row g-2" method="post" action="{{ url_for('transport_simple_subscribe') }}">
+        <div class="col-md-4">
+          <label class="form-label">Transport Route</label>
+          <select name="route_id" class="form-select">
+            <option value="">-- Choose route --</option>
+            {% for r in routes %}
+              <option value="{{ r.id }}">{{ r.name }} (UGX {{ "{:,.0f}".format(r.fare_per_term or 0) }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <input type="hidden" name="student_number" value="{{ student.student_number }}">
+        <input type="hidden" name="term" value="{{ current_term }}">
+        <input type="hidden" name="year" value="{{ current_year }}">
+        <div class="col-md-4 d-flex align-items-end gap-2">
+          <button class="btn btn-success">Subscribe (Add requirement)</button>
+          <button class="btn btn-outline-warning"
+                  formaction="{{ url_for('transport_simple_unsubscribe') }}"
+                  formmethod="post">
+            Unsubscribe
+          </button>
+        </div>
+        {% if transport %}
+          <div class="col-md-4 d-flex align-items-end">
+            <div class="small text-muted">
+              Subscribed to <strong>{{ transport.route_name }}</strong>
+              — Fare: UGX {{ "{:,.0f}".format(transport.fare_per_term or 0) }}
+            </div>
+          </div>
+        {% endif %}
+      </form>
+    </div>
+
+    <div class="row">
+      <!-- LEFT: Payment Form -->
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-3">
+          <div class="card-body">
+            <div class="mb-1">
+              <h5 class="mb-0">
+                {{ student.first_name }} {{ student.middle_name or '' }} {{ student.last_name }}
+              </h5>
+              <div class="text-muted small">
+                {{ student.student_number }} • {{ student.class_name }} {{ student.stream }} • {{ student.section }}
+              </div>
+            </div>
+            <hr>
+
+            <form method="post">
+              <input type="hidden" name="sid" value="{{ student.id }}">
+
+              <div class="row g-2 mb-3">
+                <div class="col-md-3">
+                  <label class="form-label">Payment Type</label>
+                  <select name="payment_type" id="payment_type" class="form-select">
+                    <option value="school_fees">School Fees</option>
+                    <option value="requirements">Requirements</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Term</label>
+                  <select name="term" class="form-select">
+                    {% for t in terms %}
+                      <option value="{{ t }}" {{ 'selected' if t==current_term else '' }}>{{ t }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Year</label>
+                  <input name="year" class="form-control" value="{{ current_year }}">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Method</label>
+                  <select name="method" class="form-select">
+                    <option>cash</option>
+                    <option>bank</option>
+                    <option>mobile money</option>
+                    <option>cheque</option>
+                    <option>other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Comment (optional)</label>
+                <input type="text" name="comment" class="form-control"
+                       placeholder="e.g., Part payment, receipt ref, reason, etc.">
+              </div>
+
+              <!-- Fees amount -->
+              <div id="fees_amount_box" class="mb-3">
+                <label class="form-label">Amount (UGX)</label>
+                <input type="number" step="0.01" name="amount_paid" class="form-control" placeholder="e.g. 200000">
+              </div>
+
+              <!-- Requirements -->
+              <div id="req_box" class="mb-3" style="display:none;">
+                <label class="form-label">Select Requirements ({{ student.class_name }} — {{ current_term }})</label>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered align-middle text-center">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Select</th>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Amount (UGX)</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for r in reqs %}
+                        <tr>
+                          <td>
+                            <input type="checkbox" class="req_chk" onchange="toggleReq(this)">
+                            <input type="hidden" name="req_id[]" value="{{ r.id }}" disabled>
+                            <input type="hidden" name="req_name[]" value="{{ r.name }}" disabled>
+                            <input type="hidden" name="req_amount[]" value="{{ r.amount }}" disabled>
+                          </td>
+                          <td>{{ r.name }}</td>
+                          <td>{{ r.qty or 1 }}</td>
+                          <td>{{ "{:,.0f}".format(r.amount or 0) }}</td>
+                          <td class="req_line_total">0</td>
+                        </tr>
+                      {% else %}
+                        <tr><td colspan="5">No requirements configured for this class/term.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th colspan="4" class="text-end">Total Selected</th>
+                        <th id="req_total">0</th>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              <div class="text-end">
+                <button class="btn btn-primary">Record Payment</button>
+                {% if last_fee %}
+                  <a href="{{ url_for('reprint_receipt', fee_id=last_fee.id) }}"
+                     class="btn btn-outline-primary ms-2">
+                    <i class="bi bi-printer"></i> Reprint Last Receipt
+                  </a>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Balances -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white py-2">
+            <strong>Balances ({{ current_term }} {{ current_year }})</strong>
+          </div>
+          {% if fin %}
+            <div class="card-body">
+              <table class="table table-sm">
+                <tbody>
+                  <tr><td>Expected Fees</td><td class="text-end">UGX {{ "{:,.0f}".format(fin.expected_fees or 0) }}</td></tr>
+                  <tr><td>Expected Requirements</td><td class="text-end">UGX {{ "{:,.0f}".format(fin.expected_requirements or 0) }}</td></tr>
+
+                  {% if transport %}
+                    <tr class="table-light"><td colspan="2"><strong>Transport — {{ transport.route_name }}</strong></td></tr>
+                    <tr><td>Transport Due (Term)</td><td class="text-end">UGX {{ "{:,.0f}".format(transport.fare_per_term or 0) }}</td></tr>
+                    <tr><td>Transport Paid (Term)</td><td class="text-end">UGX {{ "{:,.0f}".format(transport.paid or 0) }}</td></tr>
+                    <tr>
+                      <td>Transport Balance</td>
+                      <td class="text-end {{ 'text-danger' if (transport.balance or 0) > 0 else 'text-success' }}">
+                        UGX {{ "{:,.0f}".format(transport.balance or 0) }}
+                      </td>
+                    </tr>
+                  {% endif %}
+
+                  <tr class="text-success"><td>Bursary (this term)</td><td class="text-end">UGX {{ "{:,.0f}".format(fin.bursary_current or 0) }}</td></tr>
+                  <tr><td>Paid Fees (this term)</td><td class="text-end">UGX {{ "{:,.0f}".format(fin.paid_fees or 0) }}</td></tr>
+                  <tr><td>Paid Requirements (this term)</td><td class="text-end">UGX {{ "{:,.0f}".format(fin.paid_requirements or 0) }}</td></tr>
+
+                  <tr class="table-warning"><td><strong>Carry Forward (prev terms)</strong></td><td class="text-end"><strong>UGX {{ "{:,.0f}".format(fin.carry_forward or 0) }}</strong></td></tr>
+
+                  {# ---- UPDATED DISPLAY: Balance/Credit/Settled (this term) ---- #}
+                  {% set bal_term = fin.balance_this_term or 0 %}
+                  <tr class="{{ 'table-danger' if bal_term > 0 else 'table-success' if bal_term < 0 else 'table-light' }}">
+                    <td>
+                      <strong>
+                        {{ 'Balance (this term)' if bal_term > 0 else 'Credit (this term)' if bal_term < 0 else 'Settled (this term)' }}
+                      </strong>
+                    </td>
+                    <td class="text-end">
+                      <strong>UGX {{ "{:,.0f}".format(bal_term if bal_term >= 0 else -bal_term) }}</strong>
+                    </td>
+                  </tr>
+
+                  {# ---- UPDATED DISPLAY: Overall Balance/Credit/Settled ---- #}
+                  {% set overall = fin.overall_balance or 0 %}
+                  <tr class="{{ 'table-primary' if overall == 0 else ('table-danger' if overall > 0 else 'table-success') }}">
+                    <td>
+                      <strong>
+                        {{ 'Overall Balance' if overall > 0 else 'Overall Credit' if overall < 0 else 'Overall Settled' }}
+                      </strong>
+                    </td>
+                    <td class="text-end">
+                      <strong>UGX {{ "{:,.0f}".format(overall if overall >= 0 else -overall) }}</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="card-body">
+              <div class="text-muted">Select a student to see balances.</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ====== JS: toggle requirements block & compute totals ====== -->
+<script>
+(function(){
+  const sel = document.getElementById('payment_type');
+  const reqBox = document.getElementById('req_box');
+  const feesBox = document.getElementById('fees_amount_box');
+  function syncType(){
+    const isReq = sel && sel.value === 'requirements';
+    if (reqBox) reqBox.style.display = isReq ? '' : 'none';
+    if (feesBox) feesBox.style.display = isReq ? 'none' : '';
+    if (!isReq) {
+      const totalEl = document.getElementById('req_total');
+      if (totalEl) totalEl.innerText = '0';
+      document.querySelectorAll('.req_line_total').forEach(el => el.innerText = '0');
+      document.querySelectorAll('.req_chk').forEach(c => { c.checked = false; });
+      document.querySelectorAll('#req_box input[name="req_id[]"], #req_box input[name="req_name[]"], #req_box input[name="req_amount[]"]').forEach(el => el.disabled = true);
+    }
+  }
+  if (sel) sel.addEventListener('change', syncType);
+  syncType();
+})();
+function toggleReq(chk){
+  const row = chk.closest('tr');
+  const [idH, nameH, amtH] = row.querySelectorAll('input[type="hidden"]');
+  const amt = parseFloat(amtH.value || '0') || 0;
+  const line = row.querySelector('.req_line_total');
+  if (chk.checked) {
+    idH.disabled = nameH.disabled = amtH.disabled = false;
+    line.innerText = Math.round(amt).toLocaleString();
+  } else {
+    idH.disabled = nameH.disabled = amtH.disabled = true;
+    line.innerText = '0';
+  }
+  let total = 0;
+  document.querySelectorAll('.req_chk').forEach(c => {
+    if (c.checked) {
+      const r = c.closest('tr');
+      const a = parseFloat(r.querySelector('input[name="req_amount[]"]').value || '0') || 0;
+      total += a;
+    }
+  });
+  const totalEl = document.getElementById('req_total');
+  if (totalEl) totalEl.innerText = Math.round(total).toLocaleString();
+}
+</script>
+{% endblock %}

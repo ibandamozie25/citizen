@@ -1,0 +1,166 @@
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #e0f7fa, #ffffff);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-box {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.2);
+    text-align: center;
+    border: 1px solid #90caf9;
+}
+
+.logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 10px;
+}
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #b0bec5;
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #2196f3;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #1976d2;
+}
+
+.footer {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #607d8b;
+}
+
+.flash {
+    color: red;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.dashboard-wrapper {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #e3f2fd;
+  padding: 20px;
+  transition: width 0.3s;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar .toggle-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.sidebar h4 {
+  margin-bottom: 20px;
+}
+
+.menu,
+.submenu {
+  list-style: none;
+  padding-left: 0;
+}
+
+.menu > li {
+  font-weight: bold;
+  margin-top: 15px;
+  cursor: pointer;
+}
+
+.submenu {
+  display: none;
+  padding-left: 15px;
+}
+
+.submenu.show {
+  display: block;
+}
+
+.submenu li a {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.main-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  background-color: #f5faff;
+}
+
+.welcome {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.stat-box {
+  flex: 1 1 220px;
+  max-width: 250px;
+  padding: 20px;
+  border-radius: 10px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.bg-blue {
+  background-color: #2196f3;
+}
+
+.bg-green {
+  background-color: #4caf50;
+}
+
+.bg-lightblue {
+  background-color: #03a9f4;
+}
+
+.bg-orange {
+  background-color: #ff9800;
+}

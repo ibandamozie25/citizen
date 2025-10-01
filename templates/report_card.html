@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  :root{
+    --blue:#1D4ED8;
+    --text:#111827;
+    --muted:#6B7280;
+    --line:#E5E7EB;
+    --soft:#F9FAFB;
+    --soft2:#F3F4F6;
+  }
+  .report-wrap{background:#fff;padding:24px;border-radius:14px;border:1px solid var(--line);}
+  .print-btn{margin-bottom:12px}
+  .report-header{display:flex;align-items:center;gap:16px;justify-content:center;padding-bottom:12px;margin-bottom:16px;border-bottom:3px solid var(--blue)}
+  .report-header h3{margin:0;color:var(--blue);font-weight:800;letter-spacing:.3px}
+  .report-sub{color:#374151;font-size:.95rem;line-height:1.35}
+  .kicker{font-size:.9rem;color:var(--muted);font-weight:700;letter-spacing:.3px;margin-top:4px}
+  .pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .table{width:100%;border-collapse:collapse}
+  .table th,.table td{border:1px solid #D1D5DB;padding:8px 10px}
+  .table th{background:var(--soft2);font-weight:700;color:var(--text)}
+  .summary{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .chip{border:1px solid var(--line);border-radius:10px;background:var(--soft);padding:10px 12px}
+  .section-title{color:var(--blue);font-weight:700;margin:18px 0 8px 0}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .muted{color:var(--muted)}
+  .sign-line{margin-top:24px;display:flex;gap:24px;flex-wrap:wrap}
+  .sign-line .slot{flex:1 1 260px}
+  .sign-line .label{font-weight:600;margin-bottom:6px}
+  .sign-line .line{height:1px;background:#9CA3AF}
+  .stamp-note{text-align:center;margin-top:14px;color:var(--muted);font-style:italic}
+  .stats-bar{background:var(--blue);color:#fff;border-radius:10px;padding:10px 12px;margin:14px 0}
+  .stats-bar .row{display:flex;gap:16px;justify-content:space-around;flex-wrap:wrap}
+  .stats-bar .item{text-align:center;font-weight:600}
+  .stats-bar .item span{display:block;font-size:.85rem;font-weight:500;opacity:.95}
+  .stats-bar .item strong{display:block;font-size:1.05rem}
+
+  @media (max-width:768px){
+    .pair-grid,.two-col{grid-template-columns:1fr}
+  }
+  @media print{
+    .print-btn{display:none}
+    body{background:#fff}
+    .report-wrap{border:0;padding:0}
+    .table th{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  }
+</style>
+
+<div class="container mt-3">
+  <!-- Print -->
+  <div class="print-btn d-flex justify-content-end gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="javascript:history.back()">Back</a>
+    <button onclick="window.print()" class="btn btn-outline-primary btn-sm">Print</button>
+  </div>
+
+  <div class="report-wrap">
+    <!-- Header with badge -->
+    <div class="report-header">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="School Badge" style="height:90px; width:auto; object-fit:contain;">
+      <div class="text-center">
+        <h3>{{ school.name }}</h3>
+        <div class="report-sub">
+          <div>{{ school.motto }}</div>
+          <div>{{ school.contacts }}</div>
+          <div>{{ school.address }}</div>
+        </div>
+        <div class="kicker">END OF TERM REPORT</div>
+      </div>
+    </div>
+
+    <!-- Top info -->
+    <div class="pair-grid" style="margin-bottom:10px;">
+      <div>
+        <div><strong>Name:</strong> {{ student.name }}</div>
+        <div><strong>Number:</strong> {{ student.number }}</div>
+      </div>
+      <div>
+        <div><strong>Class:</strong> {{ student.class }} {{ student.stream }}</div>
+        <div><strong>Term/Year:</strong> {{ term }} / {{ year }}</div>
+      </div>
+    </div>
+
+    <!-- Quick stats bar (optional) -->
+    <div class="stats-bar">
+      <div class="row">
+        <div class="item"><span>Total</span><strong>{{ totals }}</strong></div>
+        <div class="item"><span>Average</span><strong>{{ "%.2f"|format(average) }}</strong></div>
+        <div class="item"><span>Aggregate</span><strong>{{ aggregate if aggregate is not none else '-' }}</strong></div>
+        <div class="item">
+          <span>Position</span>
+          <strong>{% if position %}{{ position }} of {{ total_students }}{% else %}-{% endif %}</strong>
+        </div>
+        <div class="item"><span>Division</span><strong>{{ division }}</strong></div>
+      </div>
+    </div>
+
+    <!-- EOT Results -->
+    <div class="section-title">End of Term Results</div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width:28%;">Subject</th>
+          <th style="width:10%;">EOT</th>
+          <th style="width:10%;">Total</th>
+          <th style="width:12%;">Grade</th>
+          <th>Comment</th>
+          <th style="width:12%;">Initials</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr>
+          <td>{{ r.subject }}</td>
+          <td>{{ r.eot if r.eot is not none else '' }}</td>
+          <td>{{ r.total if r.total is not none else '' }}</td>
+          <td>{{ r.grade or '' }}</td>
+          <td>{{ r.comment or '' }}</td>
+          <td>{{ r.initials or '' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center muted">No results recorded.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Summary chips -->
+    <div class="summary">
+      <div class="chip"><strong>Total:</strong> {{ totals }}</div>
+      <div class="chip"><strong>Average:</strong> {{ "%.2f"|format(average) }}</div>
+      <div class="chip"><strong>Aggregate:</strong> {{ aggregate if aggregate is not none else '-' }}</div>
+      <div class="chip"><strong>Division:</strong> {{ division }}</div>
+      <div class="chip"><strong>Class Position:</strong>
+        {% if position %} {{ position }} of {{ total_students }} {% else %} - {% endif %}
+      </div>
+    </div>
+
+    <!-- Mid-Term -->
+    <div class="section-title">Mid Term Exams</div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Assessment</th>
+          <th>Eng</th>
+          <th>Mat</</th>
+          <th>Sci</th>
+          <th>SST</th>
+          <th>Agg</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in midterms %}
+        <tr>
+          <td>{{ m.assessment }}</td>
+          <td>{{ m.eng }}</td>
+          <td>{{ m.mat }}</td>
+          <td>{{ m.sci }}</td>
+          <td>{{ m.sst }}</td>
+          <td>{{ m.agg }}</td>
+          <td>{{ m.total }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center muted">No mid-term assessments recorded.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Comments -->
+    <div class="two-col mt-2">
+      <div>
+        <div class="section-title" style="margin-top:0;">Class Teacher’s Comment</div>
+        <div class="p-2" style="border:1px solid var(--line); border-radius:8px; min-height:72px;">
+          {{ teacher_comment or '' }}
+        </div>
+      </div>
+      <div>
+        <div class="section-title" style="margin-top:0;">Head Teacher’s Comment</div>
+        <div class="p-2" style="border:1px solid var(--line); border-radius:8px; min-height:72px;">
+          {{ head_comment or '' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Next term + Grading scale -->
+    <div class="two-col mt-3">
+      <div>
+        <div class="section-title" style="margin-top:0;">Next Term</div>
+        <div class="p-2" style="border:1px solid var(--line); border-radius:8px;">
+          <strong>{{ next_term }} begins on:</strong>
+          {{ next_term_date if next_term_date else '_______' }}
+        </div>
+      </div>
+      <div>
+        <div class="section-title" style="margin-top:0;">Grading Scale</div>
+        <table class="table">
+          <thead>
+            <tr><th>Marks</th><th>Grade</th><th>Remark</th></tr>
+          </thead>
+          <tbody>
+            {% for g in grading_scale %}
+            <tr>
+              <td>{{ g.min_mark }} - {{ g.max_mark }}</td>
+              <td>{{ g.grade }}</td>
+              <td>{{ g.remark }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center muted">No scale configured.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="sign-line">
+      <div class="slot">
+        <div class="label">Class Teacher’s Signature</div>
+        <div class="line"></div>
+      </div>
+      <div class="slot">
+        <div class="label">Head Teacher’s Signature</div>
+        <div class="line"></div>
+      </div>
+      <div class="slot">
+        <div class="label">Parent/Guardian’s Signature</div>
+        <div class="line"></div>
+      </div>
+    </div>
+
+    <div class="stamp-note">Invalid without school stamp</div>
+  </div>
+</div>
+{% endblock %}

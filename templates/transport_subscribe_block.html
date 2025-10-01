@@ -1,0 +1,27 @@
+
+{% if student %}
+<div class="border rounded p-2 mb-3">
+  <form class="row g-2" method="post" action="{{ url_for('transport_simple_subscribe') }}">
+    <div class="col-md-4">
+      <label class="form-label">Transport Route</label>
+      <select name="route_id" class="form-select">
+        <option value="">-- Choose route --</option>
+        {% for r in routes %}
+          <option value="{{ r.id }}">{{ r.name }} (UGX {{ "{:,.0f}".format(r.fare_per_term or 0) }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <input type="hidden" name="student_number" value="{{ student.student_number }}">
+    <input type="hidden" name="term" value="{{ current_term }}">
+    <input type="hidden" name="year" value="{{ current_year }}">
+    <div class="col-md-4 d-flex align-items-end gap-2">
+      <button class="btn btn-success">Subscribe (Add requirement)</button>
+      <button class="btn btn-outline-warning"
+              formaction="{{ url_for('transport_simple_unsubscribe') }}"
+              formmethod="post">
+        Unsubscribe
+      </button>
+    </div>
+  </form>
+</div>
+{% endif %}

@@ -1,0 +1,106 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-primary mb-3">Teacher Management</h3>
+
+  <!-- Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{cat}} alert-dismissible fade show" role="alert">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Add Teacher -->
+  <form method="post" class="border rounded p-3 mb-4 shadow-sm">
+    <input type="hidden" name="action" value="create">
+    <div class="row g-3">
+      <div class="col-md-5">
+        <label class="form-label">Link Employee *</label>
+        <select name="employee_id" class="form-select" required>
+          <option value="">-- Select active employee (not yet a teacher) --</option>
+          {% for e in employees_free %}
+            <option value="{{ e.id }}">
+              {{ e.last_name }}, {{ e.first_name }} {{ e.middle_name or '' }} — {{ e.designation }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Initials *</label>
+        <input type="text" name="initials" class="form-control" maxlength="6" placeholder="e.g. MKS" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Classes (multi)</label>
+        <select name="classes[]" class="form-select" multiple size="4">
+          {% for cn in classes %}
+            <option value="{{ cn }}">{{ cn }}</option>
+          {% endfor %}
+        </select>
+        <small class="text-muted">Hold Ctrl/Cmd to pick multiple.</small>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Subjects (multi)</label>
+        <select name="subjects[]" class="form-select" multiple size="6">
+          {% for s in subjects %}
+            <option value="{{ s.id }}">
+              {{ s.name }}{% if s.code %} ({{ s.code }}){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 text-end">
+        <button class="btn btn-success">Add Teacher</button>
+      </div>
+	  <div class="col-md-6 col-lg-3">
+      <a class="btn btn-primary w-100" href="{{ url_for('employees_hub') }}">← Back</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Teachers Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Initials</th>
+          <th>Designation</th>
+          <th>Status</th>
+          <th class="text-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in teachers %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ t.last_name }}, {{ t.first_name }} {{ t.middle_name or '' }}</td>
+          <td>{{ t.initials }}</td>
+          <td>{{ t.designation }}</td>
+          <td>
+            <span class="badge {% if t.status=='active' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ t.status }}
+            </span>
+          </td>
+          <td class="text-nowrap">
+            <a href="{{ url_for('edit_teacher', tid=t.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+            <form method="post" action="{{ url_for('delete_teacher', tid=t.id) }}" class="d-inline"
+                  onsubmit="return confirm('Remove this teacher?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center">No teachers yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

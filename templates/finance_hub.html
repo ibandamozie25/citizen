@@ -1,0 +1,386 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  /* Readable tables */
+  .finance-table td, .finance-table th { color: #111 !important; }
+  .finance-table thead th { background-color: #e9ecef; font-weight: 600; }
+  .export-btn { float: right; }
+
+  /* Nav-pills (tab buttons) – make inactive black text, active white on blue */
+  .nav-pills .nav-link {
+    color: #000 !important;
+    background-color: #f8f9fa; /* light gray for inactive buttons */
+    border: 1px solid #e5e7eb; /* subtle border */
+    margin-right: .4rem;
+  }
+  .nav-pills .nav-link:hover {
+    background-color: #e2e6ea;
+    color: #000 !important;
+  }
+  .nav-pills .nav-link.active {
+    background-color: #1D4ED8 !important; /* deep blue */
+    color: #fff !important; /* white text only when active */
+    border-color: #1D4ED8;
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-primary m-0">Financial Hub</h4>
+    <a href="{{ url_for('finance_hub') }}" class="btn btn-primary">Reset Filters</a>
+	<a href="{{ url_for('add_expense') }}" class="btn btn-primary">Add Expense</a>
+	<a href="{{ url_for('add_income') }}" class="btn btn-primary">Add Income</a>
+	<a href="{{ url_for('payroll_hub') }}" class="btn btn-primary">Pay Staff/Employee(s)</a>
+	<a href="{{ url_for('dashboard') }}" class="btn btn-primary">← Back </a>
+  </div>
+  
+  
+
+  <!-- Filters -->
+  <form method="get" class="row g-2 mb-4 border rounded p-3 bg-light">
+    <div class="col-md-3">
+      <label class="form-label">Term</label>
+      <select name="term" class="form-select">
+        {% for t in terms %}
+          <option value="{{ t }}" {{ 'selected' if filters.term==t else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Year</label>
+      <input name="year" class="form-control" value="{{ filters.year }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">From Date (optional)</label>
+      <input type="date" name="from_date" class="form-control" value="{{ filters.from_date or '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">To Date (optional)</label>
+      <input type="date" name="to_date" class="form-control" value="{{ filters.to_date or '' }}">
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Apply</button>
+    </div>
+    <div class="small text-muted mt-2">
+      <em>If a date range is set, it overrides term/year for the lists and totals.</em>
+    </div>
+  </form>
+
+  <!-- Snapshot Cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <div class="text-muted small">Cash-In (Filtered)</div>
+          <div class="fs-5 fw-bold text-success">UGX {{ "{:,.0f}".format(snapshot.cash_in or 0) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <div class="text-muted small">Receivables (All-Time)</div>
+          <div class="fs-5 fw-bold text-danger">UGX {{ "{:,.0f}".format(snapshot.receivables or 0) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <div class="text-muted small">Net Position</div>
+          <div class="fs-5 fw-bold text-primary">UGX {{ "{:,.0f}".format(snapshot.net_position or 0) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Pills -->
+  <ul class="nav nav-pills mb-3" id="finance-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-bsheet" data-bs-toggle="tab" data-bs-target="#pane-bsheet" type="button" role="tab">Balance Sheet</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-istmt" data-bs-toggle="tab" data-bs-target="#pane-istmt" type="button" role="tab">Income Statement</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-fees" data-bs-toggle="tab" data-bs-target="#pane-fees" type="button" role="tab">Fees</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-reqs" data-bs-toggle="tab" data-bs-target="#pane-reqs" type="button" role="tab">Requirements</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-oi" data-bs-toggle="tab" data-bs-target="#pane-oi" type="button" role="tab">Other Income</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-exp" data-bs-toggle="tab" data-bs-target="#pane-exp" type="button" role="tab">Expenses</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="finance-tabs-content">
+    <!-- Balance Sheet -->
+    <div class="tab-pane fade show active" id="pane-bsheet" role="tabpanel" aria-labelledby="tab-bsheet" tabindex="0">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <strong>Balance Sheet (Snapshot)</strong>
+          <a class="btn btn-sm btn-light export-btn"
+             href="{{ url_for('finance_export', view='balance_sheet', term=filters.term, year=filters.year, from_date=filters.from_date, to_date=filters.to_date) }}">
+            Export XLSX
+          </a>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table finance-table table-bordered align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Account</th>
+                  <th class="text-end">Amount (UGX)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Cash & Cash Equivalents (filtered)</td>
+                  <td class="text-end">UGX {{ "{:,.0f}".format(snapshot.cash_in or 0) }}</td>
+                </tr>
+                <tr>
+                  <td>Accounts Receivable (all-time)</td>
+                  <td class="text-end">UGX {{ "{:,.0f}".format(snapshot.receivables or 0) }}</td>
+                </tr>
+                <tr class="bg-light">
+                  <td><strong>Net Position (simple)</strong></td>
+                  <td class="text-end"><strong>UGX {{ "{:,.0f}".format(snapshot.net_position or 0) }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="small text-muted mt-2">
+            Cash-in reflects current filters; receivables are computed all-time as (expected − bursary − paid) per student, clamped at zero.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Income Statement -->
+    <div class="tab-pane fade" id="pane-istmt" role="tabpanel" aria-labelledby="tab-istmt" tabindex="0">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <strong>Income Statement</strong>
+          <a class="btn btn-sm btn-light export-btn"
+             href="{{ url_for('finance_export', view='income_statement', term=filters.term, year=filters.year, from_date=filters.from_date, to_date=filters.to_date) }}">
+            Export XLSX
+          </a>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered finance-table">
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th class="text-end">Amount (UGX)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fees Income</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(totals.fees_total or 0) }}</td>
+              </tr>
+              <tr>
+                <td>Requirements Income</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(totals.requirements_total or 0) }}</td>
+              </tr>
+              <tr>
+                <td>Other Income</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(totals.other_income_total or 0) }}</td>
+              </tr>
+              <tr>
+                <td>Expenses</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(totals.expenses_total or 0) }}</td>
+              </tr>
+              <tr class="bg-light">
+                <td><strong>Net Income</strong></td>
+                <td class="text-end"><strong>UGX {{ "{:,.0f}".format(totals.net_total or 0) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fees -->
+    <div class="tab-pane fade" id="pane-fees" role="tabpanel" aria-labelledby="tab-fees" tabindex="0">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <strong>Fees Payments</strong>
+          <a class="btn btn-sm btn-outline-secondary export-btn"
+             href="{{ url_for('finance_export', view='fees', term=filters.term, year=filters.year, from_date=filters.from_date, to_date=filters.to_date) }}">
+            Export XLSX
+          </a>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered finance-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Student No.</th>
+                <th>Name</th>
+                <th>Method</th>
+                <th>Term</th>
+                <th>Year</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in fees_rows %}
+              <tr>
+                <td>{{ r.date_paid }}</td>
+                <td>{{ r.student_number }}</td>
+                <td>{{ r.full_name }}</td>
+                <td>{{ r.method }}</td>
+                <td>{{ r.term }}</td>
+                <td>{{ r.year }}</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(r.amount_paid or 0) }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="text-center">No records</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requirements -->
+    <div class="tab-pane fade" id="pane-reqs" role="tabpanel" aria-labelledby="tab-reqs" tabindex="0">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <strong>Requirements Payments</strong>
+          <a class="btn btn-sm btn-outline-secondary export-btn"
+             href="{{ url_for('finance_export', view='requirements', term=filters.term, year=filters.year, from_date=filters.from_date, to_date=filters.to_date) }}">
+            Export XLSX
+          </a>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered finance-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Student No.</th>
+                <th>Name</th>
+                <th>Item</th>
+                <th>Method</th>
+                <th>Term</th>
+                <th>Year</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in req_rows %}
+              <tr>
+                <td>{{ r.date_paid }}</td>
+                <td>{{ r.student_number }}</td>
+                <td>{{ r.full_name }}</td>
+                <td>{{ r.requirement_name }}</td>
+                <td>{{ r.method }}</td>
+                <td>{{ r.term }}</td>
+                <td>{{ r.year }}</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(r.amount_paid or 0) }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" class="text-center">No records</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Other Income -->
+    <div class="tab-pane fade" id="pane-oi" role="tabpanel" aria-labelledby="tab-oi" tabindex="0">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <strong>Other Income</strong>
+          <a class="btn btn-sm btn-outline-secondary export-btn"
+             href="{{ url_for('finance_export', view='other', term=filters.term, year=filters.year, from_date=filters.from_date, to_date=filters.to_date) }}">
+            Export XLSX
+          </a>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered finance-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Source</th>
+                <th>Description</th>
+                <th>Recorded By</th>
+                <th>Term</th>
+                <th>Year</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in other_rows %}
+              <tr>
+                <td>{{ o.date_received }}</td>
+                <td>{{ o.source }}</td>
+                <td>{{ o.description }}</td>
+                <td>{{ o.recorded_by }}</td>
+                <td>{{ o.term }}</td>
+                <td>{{ o.year }}</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(o.amount or 0) }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="text-center">No records</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expenses -->
+    <div class="tab-pane fade" id="pane-exp" role="tabpanel" aria-labelledby="tab-exp" tabindex="0">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <strong>Expenses</strong>
+          <a class="btn btn-sm btn-outline-secondary export-btn"
+             href="{{ url_for('finance_export', view='expenses', term=filters.term, year=filters.year, from_date=filters.from_date, to_date=filters.to_date) }}">
+            Export XLSX
+          </a>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered finance-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Recorded By</th>
+                <th>Term</th>
+                <th>Year</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in exp_rows %}
+              <tr>
+                <td>{{ e.date_spent }}</td>
+                <td>{{ e.category or '-' }}</td>
+                <td>{{ e.description }}</td>
+                <td>{{ e.type }}</td>
+                <td>{{ e.recorded_by }}</td>
+                <td>{{ e.term }}</td>
+                <td>{{ e.year }}</td>
+                <td class="text-end">UGX {{ "{:,.0f}".format(e.amount or 0) }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" class="text-center">No records</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- /tab-content -->
+</div>
+{% endblock %}

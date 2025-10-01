@@ -1,0 +1,248 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="text-primary m-0">Marks Hub</h3>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-sm btn-primary"
+         href="{{ url_for('marks_summary') }}">
+        Summary
+      </a>
+      <a class="btn btn-sm btn-outline-primary"
+         href="{{ url_for('marks_export',
+                          class=filter_class, stream=filter_stream,
+                          subject_id=filter_subject, term=filter_term, year=filter_year) }}">
+        Export Current View (XLSX)
+      </a>
+      <a class="btn btn-sm btn-primary"
+         href="{{ url_for('marks_template',
+                          class=filter_class, stream=filter_stream,
+                          subject_id=filter_subject, term=filter_term, year=filter_year) }}">
+        Download Template (XLSX)
+      </a>
+      <a class="btn btn-sm btn-secondary" href="{{ url_for('dashboard') }}">
+        ← Back
+      </a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Filters -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-2">
+      <label class="form-label">Class</label>
+      <select name="class" class="form-select">
+        <option value="">-- choose --</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {% if filter_class==c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Stream</label>
+      <select name="stream" class="form-select">
+        <option value="">All</option>
+        {% for s in streams %}
+          <option value="{{ s }}" {% if filter_stream==s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Subject</label>
+      <select name="subject_id" class="form-select" required>
+        <option value="">-- choose --</option>
+        {% for s in subjects %}
+          <option value="{{ s.id }}" {% if filter_subject==s.id %}selected{% endif %}>
+            {{ s.name }} {% if s.code %}({{ s.code }}){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Term</label>
+      {% set TERMS = ['Term 1','Term 2','Term 3'] %}
+      <select name="term" class="form-select">
+        {% for t in TERMS %}
+          <option value="{{ t }}" {% if filter_term==t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-1">
+      <label class="form-label">Year</label>
+      <input type="number" name="year" class="form-control" value="{{ filter_year }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Load Students</button>
+    </div>
+  </form>
+
+  {% if my_initials %}
+    <p class="small text-muted mb-2">Your initials: <strong>{{ my_initials }}</strong></p>
+  {% endif %}
+
+  <!-- Upload -->
+  <form method="post"
+        action="{{ url_for('marks_upload',
+                           class=filter_class, stream=filter_stream,
+                           subject_id=filter_subject, term=filter_term, year=filter_year) }}"
+        enctype="multipart/form-data" class="mb-3">
+    <div class="input-group">
+      <input type="file" name="file" class="form-control" accept=".csv,.xlsx">
+      <button class="btn btn-primary">Upload</button>
+    </div>
+    <div class="form-text">
+      Columns: student_number, (subject_id/subject_name/subject_code), term, year,
+      <strong>other_mark, holiday_mark</strong>, bot_mark, midterm_mark, eot_mark, (optional) initials.
+    </div>
+  </form>
+
+  <!-- Table -->
+  {% if students and filter_subject %}
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-light">
+        <tr class="text-center">
+          <th class="text-start">#</th>
+          <th class="text-start">Student No.</th>
+          <th class="text-start">Full Name</th>
+          <th>OTH</th>
+          <th>HP</th>
+          <th>BOT</th>
+          <th>MID</th>
+          <th>EOT</th>
+          <th>Average</th>
+          <th class="text-end">Save</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+          {% set sc = scores_by_student.get(s.id) %}
+          <tr>
+            <td class="text-start">{{ loop.index }}</td>
+            <td class="text-start">{{ s.student_number }}</td>
+            <td class="text-start">{{ s.last_name }} {{ s.first_name }} {{ s.m }}</td>
+
+            <!-- OTH -->
+            <td class="text-center" style="max-width:80px;">
+              <input type="number" min="0" max="100" step="1"
+                     class="form-control form-control-sm mark-input"
+                     data-row="{{ loop.index }}" data-type="oth"
+                     value="{{ sc.other_mark if sc and sc['other_mark'] is not none }}">
+            </td>
+            <!-- HP -->
+            <td class="text-center" style="max-width:80px;">
+              <input type="number" min="0" max="100" step="1"
+                     class="form-control form-control-sm mark-input"
+                     data-row="{{ loop.index }}" data-type="hp"
+                     value="{{ sc.holiday_mark if sc and sc['holiday_mark'] is not none }}">
+            </td>
+            <!-- BOT -->
+            <td class="text-center" style="max-width:80px;">
+              <input type="number" min="0" max="100" step="1"
+                     class="form-control form-control-sm mark-input"
+                     data-row="{{ loop.index }}" data-type="bot"
+                     value="{{ sc.bot_mark if sc and sc.bot_mark is not none }}">
+            </td>
+            <!-- MID -->
+            <td class="text-center" style="max-width:80px;">
+              <input type="number" min="0" max="100" step="1"
+                     class="form-control form-control-sm mark-input"
+                     data-row="{{ loop.index }}" data-type="mid"
+                     value="{{ sc.midterm_mark if sc and sc.midterm_mark is not none }}">
+            </td>
+            <!-- EOT -->
+            <td class="text-center" style="max-width:80px;">
+              <input type="number" min="0" max="100" step="1"
+                     class="form-control form-control-sm mark-input"
+                     data-row="{{ loop.index }}" data-type="eot"
+                     value="{{ sc.eot_mark if sc and sc.eot_mark is not none }}">
+            </td>
+
+            <!-- Average (client-side preview only) -->
+            <td class="text-center">
+              <span id="avg-{{ loop.index }}">{{ sc.average_mark if sc and sc.average_mark is not none else "" }}</span>
+            </td>
+
+            <!-- Save -->
+            <td class="text-end">
+              <form method="post" class="d-inline">
+                <input type="hidden" name="save_row" value="1">
+                <input type="hidden" name="student_number" value="{{ s.student_number }}">
+                <input type="hidden" name="subject_id" value="{{ filter_subject }}">
+                <input type="hidden" name="term" value="{{ filter_term }}">
+                <input type="hidden" name="year" value="{{ filter_year }}">
+
+                <!-- hidden mirrors filled by JS before submit -->
+                <input type="hidden" name="other_mark" id="h-oth-{{ loop.index }}" value="{{ sc.other_mark if sc and sc['other_mark'] is not none }}">
+                <input type="hidden" name="holiday_mark" id="h-hp-{{ loop.index }}" value="{{ sc.holiday_mark if sc and sc['holiday_mark'] is not none }}">
+                <input type="hidden" name="bot_mark" id="h-bot-{{ loop.index }}" value="{{ sc.bot_mark if sc and sc.bot_mark is not none }}">
+                <input type="hidden" name="midterm_mark" id="h-mid-{{ loop.index }}" value="{{ sc.midterm_mark if sc and sc.midterm_mark is not none }}">
+                <input type="hidden" name="eot_mark" id="h-eot-{{ loop.index }}" value="{{ sc.eot_mark if sc and sc.eot_mark is not none }}">
+
+                <button class="btn btn-sm btn-success">Save</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% elif filter_class and not filter_subject %}
+    <div class="alert alert-info">Select a subject to start entering marks.</div>
+  {% endif %}
+</div>
+
+<script>
+  // average across any non-empty of OTH, HP, BOT, MID, EOT
+  function recalcRow(idx) {
+    const read = (t) => {
+      const el = document.querySelector(`input.mark-input[data-row="${idx}"][data-type="${t}"]`);
+      if (!el || el.value === "") return null;
+      const n = Number(el.value);
+      return isNaN(n) ? null : n;
+    };
+
+    const oth = read("oth");
+    const hp = read("hp");
+    const bot = read("bot");
+    const mid = read("mid");
+    const eot = read("eot");
+
+    const vals = [oth, hp, bot, mid, eot].filter(v => v !== null);
+    const avg = vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : "";
+
+    document.getElementById(`avg-${idx}`).textContent = (avg === "" ? "" : Math.round(avg));
+
+    // mirror to hidden inputs (rounded integers)
+    const setH = (name, v) => {
+      const h = document.getElementById(`${name}-${idx}`);
+      if (h) h.value = (v === null ? "" : Math.round(v));
+    };
+    setH("h-oth", oth);
+    setH("h-hp", hp);
+    setH("h-bot", bot);
+    setH("h-mid", mid);
+    setH("h-eot", eot);
+  }
+
+  document.querySelectorAll("input.mark-input").forEach(el => {
+    el.addEventListener("input", () => recalcRow(el.dataset.row));
+  });
+
+  // initialize on load
+  document.querySelectorAll("input.mark-input").forEach(el => recalcRow(el.dataset.row));
+</script>
+{% endblock %}

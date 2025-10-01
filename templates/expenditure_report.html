@@ -1,0 +1,134 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .report-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    background: #ffffff;
+    border-radius: 8px;
+  }
+
+  .table-bordered td,
+  .table-bordered th {
+    border: 1px solid #dee2e6 !important;
+  }
+
+  .text-center th,
+  .text-center td {
+    vertical-align: middle;
+    text-align: center;
+  }
+</style>
+
+<div class="report-container">
+
+  <div class="text-center mb-4">
+    <h4 class="text-primary">SCHOOL NAME</h4>
+    <h5>DETAILED EXPENDITURE REPORT</h5>
+  </div>
+
+  <!-- Filter Form -->
+  <form method="POST" class="row g-3 mb-4">
+    <div class="col-md-4">
+      <label>From:</label>
+      <input type="date" name="from_date" class="form-control" value="{{ filters.from_date }}" required>
+    </div>
+    <div class="col-md-4">
+      <label>To:</label>
+      <input type="date" name="to_date" class="form-control" value="{{ filters.to_date }}" required>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100">View Report</button>
+    </div>
+  </form>
+
+  {% if expenses %}
+  <div class="text-end mb-3">
+    <button onclick="window.print()" class="btn btn-success">Print Report</button>
+  </div>
+
+  <!-- Expense Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Type</th>
+          <th>Amount (UGX)</th>
+          <th>Recorded By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in expenses %}
+        <tr>
+          <td>{{ row.date_spent }}</td>
+          <td>{{ row.description }}</td>
+          <td>{{ row.category_name or 'Uncategorized' }}</td>
+          <td>{{ row.type or 'Other' }}</td>
+          <td>{{ "{:,.0f}".format(row.amount) }}</td>
+          <td>{{ row.recorded_by or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Summaries -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <h6>Summary by Category</h6>
+      <table class="table table-sm table-bordered text-center">
+        <thead class="table-info">
+          <tr>
+            <th>Category</th>
+            <th>Total (UGX)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in summary %}
+          <tr>
+            <td>{{ row.category or 'Uncategorized' }}</td>
+            <td>{{ "{:,.0f}".format(row.total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-md-6">
+      <h6>Summary by Type</h6>
+      <table class="table table-sm table-bordered text-center">
+        <thead class="table-warning">
+          <tr>
+            <th>Type</th>
+            <th>Total (UGX)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in type_summary %}
+          <tr>
+            <td>{{ row.type or 'Other' }}</td>
+            <td>{{ "{:,.0f}".format(row.total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody> 
+      </table>
+    </div>
+  </div>
+
+  <div class="text-end mt-3">
+    <h5><strong>Total Expenses: UGX {{ "{:,.0f}".format(total) }}</strong></h5>
+  </div>
+
+  {% else %}
+  <div class="alert alert-warning text-center">No expenses found for the selected range.</div>
+  {% endif %}
+
+</div>
+{% endblock %}

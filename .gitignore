@@ -1,0 +1,19 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.log
+
+# Envs
+.env
+venv/
+.venv/
+
+# Local DB & instance files
+*.db
+instance/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db

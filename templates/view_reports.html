@@ -1,0 +1,83 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="text-primary text-center mb-4">Processed Student Reports</h4>
+
+  <form method="GET" class="row g-2 mb-3 border p-3 rounded shadow">
+    <div class="col-md-2"><select name="year" class="form-control">
+      <option value="">Year</option>
+      {% for y in years %}
+      <option value="{{ y.year }}" {% if selected_year == y.year %}selected{% endif %}>{{ y.year }}</option>
+      {% endfor %}
+    </select></div>
+    <div class="col-md-2">
+      <select name="term" class="form-control">
+        <option value="">Term</option>
+        {% for t in ['1', '2', '3'] %}
+        <option value="{{ t }}" {% if selected_term == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2"><input name="class_name" class="form-control" placeholder="Class" value="{{ selected_class }}"></div>
+    <div class="col-md-2"><input name="stream" class="form-control" placeholder="Stream" value="{{ selected_stream }}"></div>
+    <div class="col-md-2">
+      <select name="subject_id" class="form-control">
+        <option value="">Subject</option>
+        {% for s in subjects %}
+        <option value="{{ s.id }}" {% if selected_subject == s.id|string %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 text-end">
+      <button class="btn btn-primary">Filter</button>
+      <a href="{{ url_for('export_reports', year=selected_year, term=selected_term, class_name=selected_class, stream=selected_stream, subject_id=selected_subject) }}" class="btn btn-outline-success">Export</a>
+    </div>
+  </form>
+
+  {% if reports %}
+  <div class="table-responsive bg-white shadow p-2">
+    <table class="table table-bordered table-striped">
+      <thead class="table-secondary">
+        <tr>
+          <th>#</th>
+          <th>Student</th>
+          <th>Class</th>
+          <th>Stream</th>
+          <th>Subject</th>
+          <th>Part</th>
+          <th>BOT</th>
+          <th>Mid</th>
+          <th>EOT</th>
+          <th>Avg</th>
+          <th>Grade</th>
+          <th>Comment</th>
+          <th>Initials</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ r.first_name }} {{ r.middle_name or '' }} {{ r.last_name }}</td>
+          <td>{{ r.class_name }}</td>
+          <td>{{ r.stream }}</td>
+          <td>{{ r.subject_name }}</td>
+          <td>{{ r.paper_name or '-' }}</td>
+          <td>{{ r.bot_mark }}</td>
+          <td>{{ r.midterm_mark }}</td>
+          <td>{{ r.eot_mark }}</td>
+          <td>{{ "%.1f"|format(r.average or 0) }}</td>
+          <td>{{ r.grade }}</td>
+          <td>{{ r.comment }}</td>
+          <td>{{ r.teacher_initials }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No reports found for the selected filters.</div>
+  {% endif %}
+</div>
+{% endblock %}

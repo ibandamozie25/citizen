@@ -1,0 +1,84 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-primary mb-3">Teacher Load / Timetable Summary</h3>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search name…">
+    </div>
+    <div class="col-md-3">
+      <select name="class_name" class="form-select">
+        <option value="">All Classes</option>
+        {% for cn in classes %}
+          <option value="{{ cn }}" {% if class_f==cn %}selected{% endif %}>{{ cn }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="subject_id" class="form-select">
+        <option value="">All Subjects</option>
+        {% for s in subjects %}
+          <option value="{{ s.id }}" {% if subj_f|int == s.id %}selected{% endif %}>
+            {{ s.name }}{% if s.code %} ({{ s.code }}){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="status" class="form-select">
+        <option value="">All Status</option>
+        <option value="active" {% if status_f=='active' %}selected{% endif %}>Active</option>
+        <option value="archived" {% if status_f=='archived' %}selected{% endif %}>Archived</option>
+      </select>
+    </div>
+    <div class="col-md-1 d-grid">
+      <button class="btn btn-outline-primary">Filter</button>
+    </div>
+  </form>
+
+  <div class="d-flex justify-content-end mb-2">
+    <a class="btn btn-success btn-sm"
+       href="{{ url_for('teachers_load_export', q=q, class_name=class_f, subject_id=subj_f, status=status_f) }}">
+      Export CSV
+    </a>
+	</a>
+	<a class="btn btn-success" href="{{ url_for('employees_hub') }}">← Back</a>
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Teacher</th>
+          <th>Initials</th>
+          <th>Designation</th>
+          <th>Status</th>
+          <th>Subjects (Class)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ r.last_name }}, {{ r.first_name }} {{ r.middle_name or '' }}</td>
+          <td>{{ r.initials }}</td>
+          <td>{{ r.designation }}</td>
+          <td>
+            <span class="badge {% if r.status=='active' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ r.status }}
+            </span>
+          </td>
+          <td>{{ r.load_list or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center">No assignments found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

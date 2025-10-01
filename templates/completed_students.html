@@ -1,0 +1,61 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-center text-success mb-4">Completed Students</h3>
+
+  <!-- Filter Form -->
+  <form method="GET" class="row g-3 mb-4 border p-3 rounded shadow">
+    <div class="col-md-3">
+      <label>Year of Completion</label>
+      <input type="number" name="year" class="form-control" value="{{ filters.year or '' }}">
+    </div>
+    <div class="col-md-3">
+      <label>Class</label>
+      <select name="class_name" class="form-control">
+        <option value="">-- All Classes --</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {% if filters.class_name == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label>Student Last Name</label>
+      <input type="text" name="last_name" class="form-control" value="{{ filters.last_name or '' }}">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+  </form>
+
+  <!-- Completed Students Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center">
+      <thead class="table-secondary">
+        <tr>
+          <th>Student No.</th>
+          <th>Name</th>
+          <th>Completed Class</th>
+          <th>Year</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in completed %}
+        <tr>
+          <td>{{ s.student_number }}</td>
+          <td>{{ s.first_name }} {{ s.middle_name or '' }} {{ s.last_name }}</td>
+          <td>{{ s.class_name }}</td>
+          <td>{{ s.year_of_completion }}</td>
+          <td>{{ s.status }}</td>
+          <td>
+            <a href="{{ url_for('clear_completed_student', student_id=s.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure to remove this record?')">Clear</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

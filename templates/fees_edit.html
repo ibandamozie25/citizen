@@ -1,0 +1,72 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+  <a class="btn btn-secondary btn-sm mb-3" href="{{ url_for('student_statement') }}">
+    ← Back To Statement
+  </a>
+
+  <h5>Edit Transaction #{{ fee.id }} — {{ fee.student_number }} • {{ fee.first_name }} {{ fee.middle_name }} {{ fee.last_name }}</h5>
+
+  <form method="post" class="row g-3 mt-2">
+    <div class="col-md-2">
+      <label class="form-label">Term</label>
+      <input class="form-control" name="term" value="{{ fee.term or '' }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Year</label>
+      <input class="form-control" name="year" type="number" value="{{ fee.year or '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Date Paid (YYYY-MM-DD)</label>
+      <input class="form-control" name="date_paid" value="{{ fee.date_paid or '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Method</label>
+      <input class="form-control" name="method" value="{{ fee.method or '' }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Payment Type</label>
+      <select class="form-select" name="payment_type">
+        {% set p = (fee.payment_type or '')|lower %}
+        <option value="fees" {{ 'selected' if p=='fees' else '' }}>fees</option>
+        <option value="school_fees" {{ 'selected' if p=='school_fees' else '' }}>school_fees</option>
+        <option value="requirements" {{ 'selected' if p=='requirements' else '' }}>requirements</option>
+        <option value="opening_balance" {{ 'selected' if p=='opening_balance' else '' }}>opening_balance</option>
+        <option value="carry_forward" {{ 'selected' if p=='carry_forward' else '' }}>carry_forward</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Amount Paid</label>
+      <input class="form-control" name="amount_paid" value="{{ fee.amount_paid or 0 }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Expected Amount</label>
+      <input class="form-control" name="expected_amount" value="{{ fee.expected_amount or 0 }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Bursary Amount</label>
+      <input class="form-control" name="bursary_amount" value="{{ fee.bursary_amount or 0 }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Carried Forward</label>
+      <input class="form-control" name="carried_forward" value="{{ fee.carried_forward or 0 }}">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Requirement Name (if requirements)</label>
+      <input class="form-control" name="requirement_name" value="{{ fee.requirement_name or '' }}">
+    </div>
+    <div class="col-12">
+      <label class="form-label">Comment</label>
+      <input class="form-control" name="comment" value="{{ fee.comment or '' }}">
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-primary">Save</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('student_statement_by_id', student_id=fee.student_id) }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

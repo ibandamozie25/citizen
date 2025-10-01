@@ -1,0 +1,200 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3">Comment Rules</h4>
+
+  <form method="post" class="row g-2 mb-4">
+    <div class="col-md-2">
+      <label class="form-label">Role</label>
+      <select name="role" class="form-select" required>
+        <option value="teacher">Teacher</option>
+        <option value="headteacher">Headteacher</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Scope</label>
+      <select name="scope" class="form-select" required id="scope-select">
+        <option value="overall" selected>Overall</option>
+        <option value="subject">Subject</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Match by</label>
+      <select name="match_type" class="form-select" id="match-type" required>
+        <option value="division">Division</option>
+        <option value="range">Average range</option>
+        <option value="grade">Grade</option>
+      </select>
+    </div>
+
+    <!-- Grade (subject-scope typically) -->
+    <div class="col-md-2 match-field" data-for="grade" style="display:none">
+      <label class="form-label">Grade</label>
+      <select name="grade" class="form-select">
+        <option value="">—</option>
+        {% for g in grades %}
+          <option value="{{ g }}">{{ g }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Division -->
+    <div class="col-md-2 match-field" data-for="division">
+      <label class="form-label">Division</label>
+      <select name="division" class="form-select">
+        <option value="">—</option>
+        {% for d in divisions %}
+          <option value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Range -->
+    <div class="col-md-2 match-field" data-for="range" style="display:none">
+      <label class="form-label">Lower</label>
+      <input name="lower_limit" type="number" step="0.01" class="form-control" placeholder="e.g. 80">
+    </div>
+    <div class="col-md-2 match-field" data-for="range" style="display:none">
+      <label class="form-label">Upper</label>
+      <input name="upper_limit" type="number" step="0.01" class="form-control" placeholder="e.g. 100">
+    </div>
+
+    <!-- Optional scoping -->
+    <div class="col-md-2">
+      <label class="form-label">Class (optional)</label>
+      <select name="class_name" class="form-select">
+        <option value="">Any class</option>
+        {% for c in classes %}
+          <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Level (optional)</label>
+      <select name="level" class="form-select">
+        <option value="">—</option>
+        <option>Lower</option>
+        <option>Upper</option>
+        <option>Candidates</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Term (optional)</label>
+      <select name="term" class="form-select">
+        <option value="">Any term</option>
+        {% for t in terms %}
+          <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Presets -->
+    <div class="col-12">
+      <label class="form-label">Quick presets</label>
+      <select id="preset" class="form-select">
+        <option value="">— choose a preset —</option>
+        <option value="Excellent performance. Keep it up!">Excellent performance. Keep it up!</option>
+        <option value="Good progress. Maintain the momentum.">Good progress. Maintain the momentum.</option>
+        <option value="Fair work but more effort required in key areas.">Fair work but more effort required in key areas.</option>
+        <option value="Needs improvement. Focus on weak areas and seek support.">Needs improvement. Focus on weak areas and seek support.</option>
+        <option value="Outstanding behavior and steady academic performance.">Outstanding behavior and steady academic performance.</option>
+        <option value="Consistent effort noted; aim higher next term.">Consistent effort noted; aim higher next term.</option>
+      </select>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">Template text</label>
+      <textarea name="template_text" id="template_text" rows="3" class="form-control" required
+        placeholder="Write the exact sentence that should appear on the report when this rule matches."></textarea>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Priority</label>
+      <input name="priority" type="number" class="form-control" value="100">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Active</label>
+      <select name="active" class="form-select">
+        <option value="1" selected>Yes</option>
+        <option value="0">No</option>
+      </select>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Add Rule</button>
+	  <a class="btn btn-primary w-100" href="{{ url_for('manage_subjects') }}">← Back</a>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>Role</th><th>Scope</th><th>Match</th><th>Class</th><th>Level</th><th>Term</th>
+          <th>Template</th><th>Priority</th><th>Active</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>{{ r.role }}</td>
+          <td>{{ r.scope }}</td>
+          <td>
+            {% if r.match_type == 'grade' %}
+              grade={{ r.grade or '—' }}
+            {% elif r.match_type == 'division' %}
+              division={{ r.division or '—' }}
+            {% elif r.match_type == 'range' %}
+              {{ r.lower_limit or '—' }}–{{ r.upper_limit or '—' }}
+            {% endif %}
+          </td>
+          <td>{{ r.class_name or '—' }}</td>
+          <td>{{ r.level or '—' }}</td>
+          <td>{{ r.term or '—' }}</td>
+          <td style="max-width:420px">{{ r.template_text }}</td>
+          <td>{{ r.priority }}</td>
+          <td>{{ 'Yes' if r.active else 'No' }}</td>
+          <td>
+            <form method="post" action="{{ url_for('delete_comment_rule', rid=r.id) }}"
+                  onsubmit="return confirm('Delete this rule?')">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="11" class="text-center text-muted">No rules added yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// Toggle which fields show depending on match_type
+(function(){
+  const mt = document.getElementById('match-type');
+  const toggle = () => {
+    document.querySelectorAll('.match-field').forEach(el => el.style.display='none');
+    const val = mt.value;
+    document.querySelectorAll(`.match-field[data-for="${val}"]`).forEach(el => el.style.display='block');
+  };
+  mt.addEventListener('change', toggle);
+  toggle();
+
+  // Presets
+  const preset = document.getElementById('preset');
+  const ta = document.getElementById('template_text');
+  preset.addEventListener('change', () => {
+    if (preset.value) {
+      ta.value = preset.value;
+    }
+  });
+})();
+</script>
+{% endblock %}

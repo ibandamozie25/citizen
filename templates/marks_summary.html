@@ -1,0 +1,39 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-primary m-0">Marks Summary</h4>
+    <a class="btn btn-secondary btn-sm" href="{{ url_for('marks_hub') }}">← Back to Marks Hub</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped table-bordered align-middle">
+      <thead class="table-primary text-center">
+        <tr>
+          <th>Class</th>
+          <th>Stream</th>
+          <th>Subject</th>
+          <th>Term</th>
+          <th>Year</th>
+          <th>Entries</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <td>{{ r.class_name }}</td>
+            <td>{{ r.stream }}</td>
+            <td>{{ r.subject }}</td>
+            <td>{{ r.term }}</td>
+            <td>{{ r.year }}</td>
+            <td class="text-end">{{ r.entries }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="text-center">No data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

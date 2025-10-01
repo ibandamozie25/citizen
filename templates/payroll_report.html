@@ -1,0 +1,122 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+
+  <h3 class="text-primary mb-4">Payroll Report</h3>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Filters -->
+  <form method="get" class="row g-2 mb-3 border rounded p-3 bg-light shadow-sm">
+    <div class="col-md-3">
+      <label class="form-label">Term</label>
+      <select name="term" class="form-select">
+        <option value="">All Terms</option>
+        {% for t in TERMS %}
+          <option value="{{ t }}" {% if sel_term == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Year</label>
+      <input type="number" name="year" class="form-control" value="{{ sel_year }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Employee</label>
+      <select name="employee_id" class="form-select">
+        <option value="">All Employees</option>
+        {% for e in employees %}
+          <option value="{{ e.id }}" {% if sel_emp == e.id|string %}selected{% endif %}>
+            {{ e.first_name }} {{ e.middle_name or '' }} {{ e.last_name }} ({{ e.designation }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <button class="btn btn-outline-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <a href="{{ url_for('payroll_report') }}" class="btn btn-outline-secondary w-100">Clear</a>
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <a
+        href="{{ url_for('payroll_export', term=sel_term, year=sel_year, employee_id=sel_emp) }}"
+        class="btn btn-success w-100"
+        >Export</a>
+    </div>
+  </form>
+
+  <!-- Summary -->
+  <div class="alert alert-info">
+    <strong>Total Rows:</strong> {{ summary.row_count }} |
+    <strong>Total Expected:</strong> UGX {{ "{:,.0f}".format(summary.total_expected or 0) }} |
+    <strong>Paid:</strong> UGX {{ "{:,.0f}".format(summary.total_paid or 0) }} |
+    <strong>Outstanding:</strong> UGX {{ "{:,.0f}".format(summary.total_outstanding or 0) }}
+    <br>
+    <span class="badge bg-success me-1">Fully Paid: {{ summary.cnt_fully or 0 }}</span>
+    <span class="badge bg-warning text-dark me-1">Partially Paid: {{ summary.cnt_partial or 0 }}</span>
+    <span class="badge bg-danger">Not Paid: {{ summary.cnt_none or 0 }}</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Employee</th>
+          <th>Designation</th>
+          <th>Term</th>
+          <th>Year</th>
+          <th>Expected</th>
+          <th>Bonus</th>
+          <th>Allowance</th>
+          <th>Total</th>
+          <th>Paid</th>
+          <th>Status</th>
+          <th>Date Paid</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in rows %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ p.first_name }} {{ p.middle_name or '' }} {{ p.last_name }}</td>
+          <td>{{ p.designation }}</td>
+          <td>{{ p.term }}</td>
+          <td>{{ p.year }}</td>
+          <td>{{ "{:,.0f}".format(p.expected_salary) }}</td>
+          <td>{{ "{:,.0f}".format(p.bonus) }}</td>
+          <td>{{ "{:,.0f}".format(p.allowance) }}</td>
+          <td>{{ "{:,.0f}".format(p.total) }}</td>
+          <td>{{ "{:,.0f}".format(p.paid_amount) }}</td>
+          <td>
+            <span class="badge 
+              {% if p.status == 'fully_paid' %} bg-success
+              {% elif p.status == 'partially_paid' %} bg-warning text-dark
+              {% else %} bg-danger {% endif %}">
+              {{ p.status }}
+            </span>
+          </td>
+          <td>{{ p.date_paid or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="12" class="text-center">No data for the selected filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

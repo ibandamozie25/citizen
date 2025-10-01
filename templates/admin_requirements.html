@@ -1,0 +1,140 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="text-primary m-0">Manage Requirements</h4>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Add / Edit form -->
+  <form method="post" class="border rounded p-3 shadow-sm bg-light mb-3">
+    <input type="hidden" name="id" id="req_id">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Class *</label>
+        <select name="class_name" id="class_name" class="form-select" required>
+          <option value="">-- Select --</option>
+          {% for c in classes %}
+            <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Term (optional)</label>
+        <select name="term" id="term" class="form-select">
+          <option value="">All/Generic</option>
+          {% for t in terms %}
+            <option value="{{ t }}">{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Item Name *</label>
+        <input name="name" id="name" class="form-control" required>
+      </div>
+      <div class="col-md-1">
+        <label class="form-label">Qty</label>
+        <input type="number" name="qty" id="qty" class="form-control" value="1" min="1">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Amount (UGX)</label>
+        <input type="number" step="0.01" name="amount" id="amount" class="form-control" required>
+      </div>
+      <div class="col-12 text-end">
+        <button class="btn btn-primary">Save</button>
+		<a class="btn btn-primary" href="{{ url_for('admin_class_fees') }}">← Back </a>
+      </div> 
+    </div>
+  </form>
+
+  <!-- Filters -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Class</label>
+      <select name="class_name" class="form-select">
+        <option value="">All</option>
+        {% for c in classes %}
+          <option value="{{ c }}" {{ 'selected' if q_class==c else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Term</label>
+      <select name="term" class="form-select">
+        <option value="">All</option>
+        {% for t in terms %}
+          <option value="{{ t }}" {{ 'selected' if q_term==t else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end justify-content-end">
+      <button class="btn btn-outline-primary">Filter</button>
+    </div>
+  </form>
+
+  <!-- List -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center align-middle">
+      <thead class="table-primary">
+        <tr>
+          <th>#</th>
+          <th>Class</th>
+          <th>Term</th>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Amount (UGX)</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in items %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ r.class_name }}</td>
+          <td>{{ r.term or 'All/Generic' }}</td>
+          <td>{{ r.name }}</td>
+          <td>{{ r.qty }}</td>
+          <td>{{ "{:,.0f}".format(r.amount or 0) }}</td>
+          <td class="text-nowrap">
+           <!-- <button class="btn btn-sm btn-outline-primary"
+                    onclick="fillEdit({{ r.id }}, '{{ r.class_name }}', '{{ r.term or '' }}', '{{ r.name|e }}', {{ r.qty or 1 }}, {{ r.amount or 0 }})">
+              Edit
+            </button>-->
+            <form method="post" action="{{ url_for('admin_requirements_delete', rid=r.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete this requirement?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">No requirements found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function fillEdit(id, cls, term, name, qty, amount) {
+  document.getElementById('req_id').value = id;
+  document.getElementById('class_name').value = cls;
+  document.getElementById('term').value = term || '';
+  document.getElementById('name').value = name;
+  document.getElementById('qty').value = qty || 1;
+  document.getElementById('amount').value = amount || 0;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+{% endblock %}

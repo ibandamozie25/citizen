@@ -1,0 +1,69 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4" id="print-area">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex align-items-center gap-2">
+      <img src="{{ logo_url }}" alt="Logo" style="height:48px" onerror="this.style.display='none'">
+      <h5 class="mb-0">{{ school_name }}</h5>
+    </div>
+    <strong>PAYMENT RECEIPT</strong>
+  </div>
+
+  <hr class="my-2">
+
+  <div class="row">
+    <div class="col-md-6">
+      <p class="mb-1"><strong>Student:</strong>
+        {{ stu.first_name }} {% if stu.Middle_name %}{{ stu.Middle_name }}{% endif %} {{ stu.last_name }}
+      </p>
+      <p class="mb-1"><strong>Number:</strong> {{ stu.student_number }}</p>
+      <p class="mb-1"><strong>Class:</strong> {{ stu.class_name }} {{ stu.stream or '' }}</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <p class="mb-1"><strong>Term/Year:</strong> {{ fee.term }} / {{ fee.year }}</p>
+      <p class="mb-1"><strong>Date:</strong> {{ fee.date_paid or "" }}</p>
+      <p class="mb-1"><strong>Method:</strong> {{ fee.method or "N/A" }}</p>
+    </div>
+  </div>
+
+  <table class="table table-bordered mt-3">
+    <tbody>
+      <tr>
+        <th scope="row" style="width:40%">Payment Item</th>
+        <td>{{ fee.payment_type|capitalize }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Amount Paid</th>
+        <td>UGX {{ "{:,.0f}".format(fee.amount_paid or 0) }}</td>
+      </tr>
+      {% if fee.carried_forward %}
+      <tr>
+        <th scope="row">Carried Forward</th>
+        <td>UGX {{ "{:,.0f}".format(fee.carried_forward or 0) }}</td>
+      </tr>
+      {% endif %}
+      {% if fee.expected_amount %}
+      <tr>
+        <th scope="row">Amount Due (Term)</th>
+        <td>UGX {{ "{:,.0f}".format(fee.expected_amount or 0) }}</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <div class="d-print-none mt-3 d-flex gap-2">
+    <button class="btn btn-primary" onclick="window.print()">Print</button>
+    <form method="post" action="{{ url_for('receipt_reprint', payment_id=fee.id) }}">
+      <button class="btn btn-outline-secondary">Reprint to Device</button>
+    </form>
+    <a class="btn btn-light" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+  </div>
+</div>
+
+<script>
+  window.addEventListener('load', function () {
+    setTimeout(function(){ window.print(); }, 300);
+  });
+</script>
+{% endblock %}

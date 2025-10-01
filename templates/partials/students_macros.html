@@ -1,0 +1,107 @@
+
+{# templates/partials/students_macros.html #}
+{% macro render_active_students_table(rows, show_demote=False) -%}
+<div class="table-responsive">
+  <table class="table table-sm table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Student No.</th>
+        <th>Name</th>
+        <th>Class</th>
+        <th>Stream</th>
+        <th>Status</th>
+        {% if show_demote %}<th class="text-end">Actions</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in rows %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ s.student_number }}</td>
+        <td>{{ s.first_name }} {{ s.Middle_name }} {{ s.last_name }}</td>
+        <td>{{ s.class_name }}</td>
+        <td>{{ s.stream or '' }}</td>
+        <td>{{ 'Archived' if s.archived else 'Active' }}</td>
+        {% if show_demote %}
+        <td class="text-end">
+          <form method="post" action="{{ url_for('promotions_demote', student_id=s.id) }}" class="d-inline"
+                onsubmit="return confirm('Revert this student to the previous class?');">
+            {# {{ csrf_token() }} <-- if you use CSRF #}
+            <button class="btn btn-sm btn-outline-secondary">Demote</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="{{ 6 + (1 if show_demote else 0) }}" class="text-center text-muted">No students found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{%- endmacro %}
+
+
+{% macro render_archived_students_table(rows, show_unarchive=True) -%}
+<div class="table-responsive">
+  <table class="table table-sm table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Student No.</th>
+        <th>Name</th>
+        <th>Class</th>
+        <th>Stage</th>
+        <th>Year</th>
+        <th class="text-end">Outstanding</th>
+        <th>Archived On</th>
+        {% if show_unarchive %}<th class="text-end">Actions</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ r.student_number }}</td>
+        <td>{{ r.full_name }}</td>
+        <td>{{ r.class_name }}</td>
+        <td>{{ r.completed_stage }}</td>
+        <td>{{ r.year_completed }}</td>
+        <td class="text-end">{{ "{:,.0f}".format(r.outstanding_balance or 0) }}</td>
+        <td>{{ r.archived_on }}</td>
+        {% if show_unarchive %}
+        <td class="text-end">
+          <form method="post" action="{{ url_for('unarchive_student', student_id=r.student_id or 0) }}" class="d-inline"
+                onsubmit="return confirm('Restore this student to active?');">
+            {# {{ csrf_token() }} #}
+            <button class="btn btn-sm btn-outline-secondary" {{ 'disabled' if not r.student_id }}>Unarchive</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="{{ 8 + (1 if show_unarchive else 0) }}" class="text-center text-muted">No archived students found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{%- endmacro %}
+
+
+{% macro render_preview_list(rows, source_class, target_class) -%}
+<div class="alert alert-info">
+  Preview: Promote {{ source_class }} → {{ target_class }} ({{ rows|length }} students)
+</div>
+<ul class="list-group mb-3">
+  {% for s in rows %}
+    <li class="list-group-item d-flex justify-content-between">
+      <span>{{ s.student_number }} — {{ s.first_name }} {{ s.middle_name }} {{ s.last_name }}</span>
+      <span class="text-muted">{{ s.class_name }} {{ s.stream or '' }}</span>
+    </li>
+  {% endfor %}
+</ul>
+{%- endmacro %}

@@ -1,0 +1,29 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h3 class="text-center text-primary mb-4">Student Registration</h3>
+
+    <!-- Import Cumulative Score Section -->
+    {% if student %}
+      <div class="alert alert-info">
+        <p><strong>Have historical academic scores?</strong></p>
+        <p>
+          <a href="{{ url_for('import_cumulative_scores', student_id=student.id) }}" class="btn btn-sm btn-primary">
+            Import Cumulative Scores
+          </a>
+          <a href="{{ url_for('download_template') }}" class="btn btn-sm btn-outline-secondary">
+            Download Template
+          </a>
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Registration Form -->
+    <form method="POST" class="row g-3 border p-4 rounded shadow mb-4">
+      <input type="hidden" name="add_student" value="1">
+      <!-- continue with the rest of the form... -->
+    </form>
+  </div>
+{% endblock %}

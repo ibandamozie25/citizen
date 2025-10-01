@@ -1,0 +1,57 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-primary mb-3">Edit Teacher</h3>
+
+  <!-- Teacher header -->
+  <div class="alert alert-info">
+    <strong>{{ teacher.last_name }}, {{ teacher.first_name }} {{ teacher.middle_name or '' }}</strong>
+    — {{ teacher.designation }}
+  </div>
+
+  <form method="post" class="border rounded p-3 shadow-sm">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Initials *</label>
+        <input type="text" name="initials" class="form-control" value="{{ teacher.initials }}" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option value="active" {% if teacher.status=='active' %}selected{% endif %}>Active</option>
+          <option value="archived" {% if teacher.status=='archived' %}selected{% endif %}>Archived</option>
+        </select>
+      </div>
+
+      <div class="col-md-6"></div>
+
+      <div class="col-md-4">
+        <label class="form-label">Classes (multi)</label>
+        <select name="classes[]" class="form-select" multiple size="6">
+          {% for cn in classes %}
+            <option value="{{ cn }}" {% if cn in chosen_classes %}selected{% endif %}>{{ cn }}</option>
+          {% endfor %}
+        </select>
+        <small class="text-muted">Hold Ctrl/Cmd to pick multiple.</small>
+      </div>
+
+      <div class="col-md-8">
+        <label class="form-label">Subjects (multi)</label>
+        <select name="subjects[]" class="form-select" multiple size="8">
+          {% for s in subjects %}
+            <option value="{{ s.id }}" {% if s.id in chosen_subjects %}selected{% endif %}>
+              {{ s.name }}{% if s.code %} ({{ s.code }}){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 text-end">
+        <a href="{{ url_for('teachers_hub') }}" class="btn btn-outline-secondary">Back</a>
+        <button class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h2 style="text-align:center;">Student Clearance List – {{ term }} {{ year }}</h2>
+
+<form method="GET" style="text-align:center; margin-bottom: 10px;">
+  <input type="text" name="student_id" placeholder="Search by ID" value="{{ request.args.get('student_id', '') }}">
+  <input type="text" name="last_name" placeholder="Search by Last Name" value="{{ request.args.get('last_name', '') }}">
+  <input type="text" name="date_paid" placeholder="Search by Date (YYYY-MM-DD)" value="{{ request.args.get('date_paid', '') }}">
+  <input type="submit" value="Search">
+</form>
+
+<div style="text-align:center; margin-bottom: 15px;">
+  <button onclick="window.print()">Print Clearance List</button>
+</div>
+
+<table border="1" style="width:100%; text-align:center; border-collapse: collapse;">
+  <thead style="background-color: #f0f0f0;">
+    <tr>
+      <th>Student No</th>
+      <th>Name</th>
+      <th>Term</th>
+      <th>Year</th>
+      <th>Date Paid</th>
+      <th>Paid</th>
+      <th>Expected</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in students %}
+      <tr>
+        <td>{{ s['student_number'] }}</td>
+        <td>{{ s['first_name'] }} {{ s['last_name'] }}</td>
+        <td>{{ s['term'] }}</td>
+        <td>{{ s['year'] }}</td>
+        <td>{{ s['date_paid'] or '—' }}</td>
+        <td>{{ s['total_paid'] }}</td>
+        <td>{{ s['expected'] }}</td>
+        <td style="color: {% if s['clearance_status'] == 'Cleared' %}green{% else %}red{% endif %}; font-weight:bold;">
+          {{ s['clearance_status'] }}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div style="text-align:center; margin-top: 20px;">
+  <a href="{{ url_for('dashboard') }}"><button>Back to Dashboard</button></a>
+</div>
+
+<style>
+  @media print {
+    form, button, a { display: none !important; }
+    table { font-size: 12pt; }
+  }
+</style>
+{% endblock %}

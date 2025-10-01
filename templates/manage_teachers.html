@@ -1,0 +1,75 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-primary m-0">Teachers</h4>
+    <div>
+      <a href="{{ url_for('new_teacher') }}" class="btn btn-sm btn-primary">New Teacher</a>
+    </div>	
+  
+
+  <form method="get" class="mb-3 d-flex gap-2">
+    <input name="q" value="{{ q or '' }}" class="form-control" placeholder="Search by name, initials, class...">
+    <button class="btn btn-outline-secondary">Search</button>
+  </form>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Initials</th>
+          <th>Class</th>
+          <th>Subjects (snapshot)</th>
+          <th>Status</th>
+          <th style="width:220px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in teachers %}
+        <tr>
+          <td>{{ t.id }}</td>
+          <td>
+            {{ (t.first_name or '') }} {% if t.Middle_name %}{{ t.Middle_name }}{% endif %} {{ (t.last_name or '') }}
+            <div class="text-muted small">{{ t.designation or '' }}</div>
+          </td>
+          <td>{{ t.initials or '' }}</td>
+          <td>{{ t.class_name or '' }}</td>
+          <td>{{ t.subjects or '' }}</td>
+          <td>
+            <span class="badge {% if t.status=='active' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ t.status }}
+            </span>
+          </td>
+          <td class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('edit_teacher', teacher_id=t.id) }}">Edit</a>
+            <a class="btn btn-sm btn-outline-info" href="{{ url_for('assign_teacher_subjects', teacher_id=t.id) }}">Assign</a>
+            <form method="post" action="{{ url_for('toggle_teacher', teacher_id=t.id) }}" class="d-inline">
+              <button class="btn btn-sm btn-outline-warning" onclick="return confirm('Toggle status?')">Toggle</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_teacher', teacher_id=t.id) }}" class="d-inline">
+              <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete teacher? This removes assignments too.')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-5">No teachers found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

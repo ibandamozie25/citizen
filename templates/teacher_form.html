@@ -1,0 +1,121 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4 class="text-primary mb-3">
+    {% if mode=='edit' %}Edit Teacher{% else %}New Teacher{% endif %}
+  </h4>
+
+  <form method="post" class="border rounded p-3 bg-white">
+    <div class="row g-3">
+
+      <!-- Link to employee or quick-create -->
+      <div class="col-md-6">
+        <label class="form-label">Link to Employee</label>
+        <select name="employee_id" class="form-select">
+          <option value="">-- None / Create below --</option>
+          {% for e in employees %}
+            <option value="{{ e.id }}"
+              {% if mode=='edit' and t and t.employee_id==e.id %}selected{% endif %}>
+              {{ e.last_name }}, {{ e.first_name }} {{ e.Middle_name }} ({{ e.designation or 'Employee' }})
+            </option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Leave blank and fill names below to create a new employee record.</div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Initials</label>
+        <input class="form-control" name="initials" value="{{ t.initials if t else '' }}">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          {% set st = (t.status if t else 'active') %}
+          <option value="active" {{ 'selected' if st=='active' else '' }}>active</option>
+          <option value="archived" {{ 'selected' if st=='archived' else '' }}>archived</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Class (homeroom)</label>
+        <select name="class_name" class="form-select">
+          <option value="">-- None --</option>
+          {% for c in classes %}
+            <option value="{{ c }}" {% if mode=='edit' and t and t.class_name==c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Quick employee create fields (used only if no employee selected) -->
+      <div class="col-12"><hr></div>
+      <div class="col-md-3">
+        <label class="form-label">First Name (new employee)</label>
+        <input name="first_name" class="form-control" value="">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Middle Name</label>
+        <input name="Middle_name" class="form-control" value="">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Last Name</label>
+        <input name="last_name" class="form-control" value="">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Phone</label>
+        <input name="phone" class="form-control" value="">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input name="email" type="email" class="form-control" value="">
+      </div>
+
+      <!-- Optional: create login -->
+      <div class="col-12"><hr></div>
+      <div class="col-md-3">
+        <label class="form-label">Create Login?</label>
+        <select name="create_login" class="form-select">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Username</label>
+        <input name="username" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Password</label>
+        <input name="password" type="password" class="form-control">
+      </div>
+
+      <!-- Optional: initial subjects selection -->
+      <div class="col-12"><hr></div>
+      <div class="col-md-12">
+        <label class="form-label">Subjects (multi-select)</label>
+        <div class="row row-cols-2 row-cols-md-3 g-2">
+          {% set selected = assigned or [] %}
+          {% for s in subjects %}
+            <div class="col">
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="subject_ids" value="{{ s.id }}"
+                  {% if s.id in selected %}checked{% endif %}>
+                <span class="form-check-label">{{ s.name }}{% if s.code %} ({{ s.code }}){% endif %}</span>
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="form-text">You can also change these later via Assign.</div>
+      </div>
+
+    </div>
+
+    <div class="text-end mt-3">
+      <a href="{{ url_for('manage_teachers') }}" class="btn btn-outline-secondary">Cancel</a>
+      <button class="btn btn-primary">
+        {% if mode=='edit' %}Save Changes{% else %}Create Teacher{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="text-primary">Add Expense</h3>
+    <!--<a href="{{ url_for('export_expenses') }}" class="btn btn-primary">Export to Excel</a>-->
+	<a href="{{ url_for('finance_hub') }}" class="btn btn-primary">← Back </a>
+	
+	
+  </div>
+
+  <form method="POST" class="row g-3 border p-4 shadow rounded bg-white">
+    <div class="col-md-6">
+      <label>Description</label>
+      <input type="text" name="description" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label>Amount (UGX)</label>
+      <input type="number" name="amount" class="form-control" required step="0.01">
+    </div>
+    <div class="col-md-3">
+      <label>Date Spent</label>
+      <input type="date" name="date_spent" class="form-control">
+    </div>
+
+    <div class="col-md-4">
+      <label>Category</label>
+      <select name="category_id" class="form-control" required>
+        <option value="">-- Select Category --</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}">{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label>Type</label>
+      <select name="type" class="form-select">
+        <option value="staff_pay">Staff Pay</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end justify-content-end">
+      <button type="submit" class="btn btn-success w-100">Submit Expense</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-center text-primary mb-4">Asset Registration</h3>
+  
+  <!-- Add Asset Form -->
+  <form method="POST" class="row g-3 mb-4 border p-3 rounded shadow">
+    <input type="hidden" name="add_asset" value="1">
+    <div class="col-md-4">
+      <label>Asset Name</label>
+      <input type="text" name="name" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Model</label>
+      <input type="text" name="model" class="form-control">
+    </div>
+    <div class="col-md-4">
+      <label>Year Purchased</label>
+      <input type="date" name="year_purchased" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Condition</label>
+      <select name="condition" class="form-control" required>
+        <option value="">-- Select Condition --</option>
+        <option>Good</option>
+        <option>Fair</option>
+        <option>Damaged</option>
+        <option>Archived</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label>Value (UGX)</label>
+      <input type="number" name="value" class="form-control" step="0.01">
+    </div>
+	<div class="col-md-4">
+      <label>Quantity</label>
+      <input type="text" name="qty" class="form-control" required>
+    </div>
+    <div class="col-12 text-end">
+      <button class="btn btn-success" type="submit">Add Asset</button>
+    </div>
+  </form>
+
+  <!-- Filter Form -->
+  <form method="POST" class="row g-3 mb-3 border p-3 rounded shadow">
+    <input type="hidden" name="filter" value="1">
+    <div class="col-md-3">
+      <label>From:</label>
+      <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+    </div>
+    <div class="col-md-3">
+      <label>To:</label>
+      <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+    </div>
+    <div class="col-md-4">
+      <label>Asset Name:</label>
+      <input type="text" name="asset_name" class="form-control" value="{{ asset_name }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+  </form>
+
+  <!-- Export Button -->
+  <div class="d-flex justify-content-end mb-2">
+    <a href="{{ url_for('export_assets') }}" class="btn btn-success">Export to Excel</a>
+	<a href="{{ url_for('dashboard') }}" class="btn btn-success"> ← Back</a>
+  </div>
+  
+  <!-- Assets Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped text-center">
+      <thead class="table-primary">
+        <tr>
+          <th>Name</th>
+          <th>Model</th>
+          <th>Year Purchased</th>
+          <th>Condition</th>
+          <th>Value (UGX)</th>
+		  <th>Quantity</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for asset in assets %}
+        <tr>
+          <td>{{ asset.name }}</td>
+          <td>{{ asset.model }}</td>
+          <td>{{ asset.year_purchased }}</td>
+          <td>{{ asset.condition }}</td>
+          <td>{{ "{:,.0f}".format(asset.value or 0) }}</td>
+		  <td>{{ asset.qty }}</td>
+          <td>
+            <a href="{{ url_for('edit_asset', asset_id=asset.id) }}" class="btn btn-sm btn-warning">Edit</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

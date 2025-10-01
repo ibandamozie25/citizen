@@ -1,0 +1,82 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="text-primary mb-3">Students</h3>
+
+  {# Flash #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="table-responsive">
+    <table class="table table-striped table-sm align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Student No.</th>
+          <th>Full Name</th>
+          <th>Class</th>
+          <th>Stream</th>
+          <th>Status</th>
+          <th class="text-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ s.student_number }}</td>
+          <td>{{ s.first_name }} {{ s.Middle_name or '' }} {{ s.last_name }}</td>
+          <td>{{ s.class_name }}</td>
+          <td>{{ s.stream or '-' }}</td>
+          <td>
+            {% if s.archived %}
+              <span class="badge bg-secondary">Archived</span>
+            {% else %}
+              <span class="badge bg-success">Active</span>
+            {% endif %}
+          </td>
+          <td class="text-nowrap">
+            {# Undo last promotion for this learner #}
+            <form method="post"
+                  action="{{ url_for('promotions_demote', student_id=s.id) }}"
+                  class="d-inline"
+                  onsubmit="return confirm('Revert last promotion for {{ s.first_name }} {{ s.last_name }}?');">
+              <button class="btn btn-sm btn-outline-warning">Demote (Undo)</button>
+            </form>
+
+            {% if not s.archived %}
+              {# Archive #}
+              <form method="post"
+                    action="{{ url_for('archive_student', student_id=s.id) }}"
+                    class="d-inline"
+                    onsubmit="return confirm('Archive {{ s.first_name }} {{ s.last_name }}?');">
+                <button class="btn btn-sm btn-outline-secondary">Archive</button>
+              </form>
+            {% else %}
+              {# Unarchive #}
+              <form method="post"
+                    action="{{ url_for('unarchive_student', student_id=s.id) }}"
+                    class="d-inline"
+                    onsubmit="return confirm('Unarchive {{ s.first_name }} {{ s.last_name }} and restore access?');">
+                <button class="btn btn-sm btn-outline-success">Unarchive</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+          <tr><td colspan="7" class="text-center">No students found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
